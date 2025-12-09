@@ -7,6 +7,7 @@ import { AppProvider } from "@/contexts/AppContext";
 
 // Pages
 import Index from "./pages/Index";
+import Landing from "./pages/Landing";
 import Splash from "./pages/Splash";
 import Welcome from "./pages/Welcome";
 import Auth from "./pages/Auth";
@@ -32,6 +33,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/landing" element={<Landing />} />
             <Route path="/splash" element={<Splash />} />
             <Route path="/welcome" element={<Welcome />} />
             <Route path="/auth" element={<Auth />} />

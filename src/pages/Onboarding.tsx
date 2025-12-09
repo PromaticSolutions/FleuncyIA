@@ -27,7 +27,7 @@ const goals = [
 
 const Onboarding: React.FC = () => {
   const navigate = useNavigate();
-  const { updateUserProfile, setOnboardingComplete } = useApp();
+  const { updateUserProfile, setHasCompletedOnboarding } = useApp();
   const [step, setStep] = useState(1);
   const [selectedLanguage, setSelectedLanguage] = useState<Language>('english');
   const [selectedLevel, setSelectedLevel] = useState<Level>('basic');
@@ -42,7 +42,7 @@ const Onboarding: React.FC = () => {
         level: selectedLevel,
         weeklyGoal: selectedGoal,
       });
-      setOnboardingComplete(true);
+      setHasCompletedOnboarding(true);
       navigate('/home');
     }
   };

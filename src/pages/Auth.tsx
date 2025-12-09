@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const Auth: React.FC = () => {
   const navigate = useNavigate();
-  const { setUser, setOnboardingComplete } = useApp();
+  const { setUser, setHasCompletedOnboarding } = useApp();
   const { toast } = useToast();
   
   const [showPassword, setShowPassword] = useState(false);
@@ -62,7 +62,7 @@ const Auth: React.FC = () => {
       createdAt: new Date(),
     });
     
-    setOnboardingComplete(false);
+    setHasCompletedOnboarding(false);
     setIsLoading(false);
     toast({
       title: "Conta criada!",

@@ -1,16 +1,26 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
+import { 
+  User, 
+  Mail, 
+  Globe, 
+  Target, 
+  Clock, 
+  MessageSquare,
+  Edit2,
+  Save,
+  X
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Edit, LogOut, Crown, Clock, MessageSquare, Settings } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
+import { AppLayout } from '@/components/AppLayout';
 
 const Profile: React.FC = () => {
-  const navigate = useNavigate();
-  const { user, setUser, conversations } = useApp();
-  const { toast } = useToast();
+  const { user, conversations } = useApp();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedName, setEditedName] = useState(user?.name || '');
 
-  const languageNames: Record<string, string> = {
+  const languageLabels: Record<string, string> = {
     english: 'Inglês',
     spanish: 'Espanhol',
     french: 'Francês',
@@ -18,22 +28,12 @@ const Profile: React.FC = () => {
     german: 'Alemão',
   };
 
-  const levelNames: Record<string, string> = {
+  const levelLabels: Record<string, string> = {
     basic: 'Básico',
     intermediate: 'Intermediário',
     advanced: 'Avançado',
   };
 
-  const handleLogout = () => {
-    setUser(null);
-    toast({
-      title: "Até logo!",
-      description: "Você foi desconectado com sucesso.",
-    });
-    navigate('/');
-  };
-
-  // Calculate total study time
   const totalMinutes = conversations.reduce((acc, c) => {
     if (c.endedAt) {
       return acc + Math.round((c.endedAt.getTime() - c.startedAt.getTime()) / 60000);
@@ -41,153 +41,136 @@ const Profile: React.FC = () => {
     return acc;
   }, 0);
 
+  const handleSave = () => {
+    setIsEditing(false);
+  };
+
   return (
-    <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
-      <div className="gradient-primary px-6 pt-12 pb-24 rounded-b-3xl">
-        <div className="flex items-center justify-between mb-8">
-          <button 
-            onClick={() => navigate('/home')}
-            className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center"
-          >
-            <ArrowLeft className="w-5 h-5 text-white" />
-          </button>
-          <h1 className="text-xl font-bold text-white">Perfil</h1>
-          <button 
-            onClick={() => navigate('/settings')}
-            className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center"
-          >
-            <Settings className="w-5 h-5 text-white" />
-          </button>
+    <AppLayout>
+      <div className="p-6 lg:p-8 max-w-3xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Perfil</h1>
+          <p className="text-muted-foreground">Gerencie suas informações pessoais</p>
         </div>
 
-        <div className="flex flex-col items-center">
-          <div className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-4xl mb-4 border-4 border-white/30">
-            {user?.avatar || '👤'}
+        <div className="space-y-6">
+          {/* Profile Card */}
+          <div className="bg-card rounded-xl border border-border p-6">
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-4xl">
+                  {user?.avatar || '👤'}
+                </div>
+                <div>
+                  {isEditing ? (
+                    <Input
+                      value={editedName}
+                      onChange={(e) => setEditedName(e.target.value)}
+                      className="font-semibold text-lg mb-1"
+                    />
+                  ) : (
+                    <h2 className="font-semibold text-xl text-foreground">{user?.name}</h2>
+                  )}
+                  <p className="text-muted-foreground">{user?.email}</p>
+                </div>
+              </div>
+              
+              {isEditing ? (
+                <div className="flex gap-2">
+                  <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                  <Button size="sm" onClick={handleSave}>
+                    <Save className="w-4 h-4 mr-1" />
+                    Salvar
+                  </Button>
+                </div>
+              ) : (
+                <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}>
+                  <Edit2 className="w-4 h-4 mr-1" />
+                  Editar
+                </Button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <InfoItem 
+                icon={<Globe className="w-5 h-5" />}
+                label="Idioma de estudo"
+                value={user ? languageLabels[user.language] : '-'}
+              />
+              <InfoItem 
+                icon={<Target className="w-5 h-5" />}
+                label="Nível"
+                value={user ? levelLabels[user.level] : '-'}
+              />
+              <InfoItem 
+                icon={<Target className="w-5 h-5" />}
+                label="Meta semanal"
+                value={`${user?.weeklyGoal || 0} conversas`}
+              />
+              <InfoItem 
+                icon={<Mail className="w-5 h-5" />}
+                label="Email"
+                value={user?.email || '-'}
+              />
+            </div>
           </div>
-          <h2 className="text-2xl font-bold text-white">{user?.name}</h2>
-          <p className="text-white/80">{user?.email}</p>
+
+          {/* Stats Card */}
+          <div className="bg-card rounded-xl border border-border p-6">
+            <h3 className="font-semibold text-foreground mb-4">Estatísticas</h3>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <StatItem 
+                icon={<MessageSquare className="w-5 h-5" />}
+                value={conversations.length.toString()}
+                label="Conversas"
+              />
+              <StatItem 
+                icon={<Clock className="w-5 h-5" />}
+                value={`${totalMinutes} min`}
+                label="Tempo total"
+              />
+              <StatItem 
+                icon={<Target className="w-5 h-5" />}
+                value="B1"
+                label="Nível estimado"
+              />
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Stats Card */}
-      <div className="px-4 -mt-12">
-        <div className="bg-card rounded-2xl shadow-fluency-lg p-4 border border-border grid grid-cols-3 gap-4">
-          <div className="text-center">
-            <div className="w-10 h-10 rounded-xl bg-fluency-light-blue flex items-center justify-center mx-auto mb-2">
-              <Clock className="w-5 h-5 text-primary" />
-            </div>
-            <p className="text-lg font-bold text-foreground">{totalMinutes}</p>
-            <p className="text-xs text-muted-foreground">min estudados</p>
-          </div>
-          <div className="text-center">
-            <div className="w-10 h-10 rounded-xl bg-fluency-light-purple flex items-center justify-center mx-auto mb-2">
-              <MessageSquare className="w-5 h-5 text-secondary" />
-            </div>
-            <p className="text-lg font-bold text-foreground">{conversations.length}</p>
-            <p className="text-xs text-muted-foreground">conversas</p>
-          </div>
-          <div className="text-center">
-            <div className="w-10 h-10 rounded-xl bg-warning/20 flex items-center justify-center mx-auto mb-2">
-              <Crown className="w-5 h-5 text-warning" />
-            </div>
-            <p className="text-lg font-bold text-foreground capitalize">
-              {user?.plan === 'free_trial' ? 'Trial' : 
-               user?.plan === 'fluency_plus' ? 'Plus' : user?.plan}
-            </p>
-            <p className="text-xs text-muted-foreground">plano</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Profile Info */}
-      <div className="px-4 mt-6 space-y-4">
-        <div className="bg-card rounded-2xl border border-border divide-y divide-border">
-          <ProfileItem label="Nome" value={user?.name || '-'} />
-          <ProfileItem label="Email" value={user?.email || '-'} />
-          <ProfileItem 
-            label="Idioma estudado" 
-            value={user?.language ? languageNames[user.language] : '-'} 
-          />
-          <ProfileItem 
-            label="Nível" 
-            value={user?.level ? levelNames[user.level] : '-'} 
-          />
-          <ProfileItem 
-            label="Meta semanal" 
-            value={`${user?.weeklyGoal || 0} conversas/semana`} 
-          />
-        </div>
-
-        <Button 
-          variant="outline" 
-          size="lg" 
-          className="w-full"
-          onClick={() => toast({ title: "Editar perfil", description: "Em breve!" })}
-        >
-          <Edit className="w-5 h-5 mr-2" />
-          Editar Perfil
-        </Button>
-
-        <Button 
-          variant="ghost" 
-          size="lg" 
-          className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
-          onClick={handleLogout}
-        >
-          <LogOut className="w-5 h-5 mr-2" />
-          Sair da conta
-        </Button>
-      </div>
-
-      {/* Bottom Navigation */}
-      <BottomNav />
-    </div>
+    </AppLayout>
   );
 };
 
-const ProfileItem: React.FC<{ label: string; value: string }> = ({ label, value }) => (
-  <div className="flex items-center justify-between px-4 py-4">
-    <span className="text-muted-foreground">{label}</span>
-    <span className="font-medium text-foreground">{value}</span>
+const InfoItem: React.FC<{ 
+  icon: React.ReactNode; 
+  label: string; 
+  value: string;
+}> = ({ icon, label, value }) => (
+  <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+    <div className="text-muted-foreground">{icon}</div>
+    <div>
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="font-medium text-foreground">{value}</p>
+    </div>
   </div>
 );
 
-const BottomNav: React.FC = () => {
-  const navigate = useNavigate();
-  const location = window.location.pathname;
-
-  const navItems = [
-    { icon: '🏠', label: 'Início', path: '/home' },
-    { icon: '📚', label: 'Histórico', path: '/history' },
-    { icon: '📊', label: 'Análises', path: '/analytics' },
-    { icon: '👤', label: 'Perfil', path: '/profile' },
-  ];
-
-  return (
-    <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border px-2 py-2">
-      <div className="flex justify-around max-w-md mx-auto">
-        {navItems.map((item) => (
-          <button
-            key={item.path}
-            onClick={() => navigate(item.path)}
-            className={`flex flex-col items-center gap-1 py-2 px-4 rounded-xl transition-all ${
-              location === item.path 
-                ? 'bg-fluency-light-blue' 
-                : 'hover:bg-muted'
-            }`}
-          >
-            <span className="text-xl">{item.icon}</span>
-            <span className={`text-xs font-medium ${
-              location === item.path ? 'text-primary' : 'text-muted-foreground'
-            }`}>
-              {item.label}
-            </span>
-          </button>
-        ))}
-      </div>
+const StatItem: React.FC<{ 
+  icon: React.ReactNode; 
+  value: string; 
+  label: string;
+}> = ({ icon, value, label }) => (
+  <div className="text-center p-4 bg-muted/50 rounded-lg">
+    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-2 text-primary">
+      {icon}
     </div>
-  );
-};
+    <p className="text-2xl font-bold text-foreground">{value}</p>
+    <p className="text-sm text-muted-foreground">{label}</p>
+  </div>
+);
 
 export default Profile;

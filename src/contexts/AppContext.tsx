@@ -9,9 +9,10 @@ interface AppContextType {
   addConversation: (conversation: Conversation) => void;
   currentConversation: Conversation | null;
   setCurrentConversation: (conversation: Conversation | null) => void;
-  onboardingComplete: boolean;
-  setOnboardingComplete: (complete: boolean) => void;
+  hasCompletedOnboarding: boolean;
+  setHasCompletedOnboarding: (complete: boolean) => void;
   updateUserProfile: (updates: Partial<User>) => void;
+  logout: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -20,7 +21,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [user, setUser] = useState<User | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
-  const [onboardingComplete, setOnboardingComplete] = useState(false);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
   const addConversation = (conversation: Conversation) => {
     setConversations(prev => [conversation, ...prev]);
@@ -30,6 +31,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (user) {
       setUser({ ...user, ...updates });
     }
+  };
+
+  const logout = () => {
+    setUser(null);
+    setConversations([]);
+    setCurrentConversation(null);
+    setHasCompletedOnboarding(false);
   };
 
   return (
@@ -42,9 +50,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         addConversation,
         currentConversation,
         setCurrentConversation,
-        onboardingComplete,
-        setOnboardingComplete,
+        hasCompletedOnboarding,
+        setHasCompletedOnboarding,
         updateUserProfile,
+        logout,
       }}
     >
       {children}
