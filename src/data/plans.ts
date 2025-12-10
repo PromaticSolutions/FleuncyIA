@@ -1,5 +1,21 @@
 import { Plan } from '@/types';
 
+// Stripe product and price IDs mapping
+export const stripePrices = {
+  beginner: {
+    price_id: 'price_1ScrTzHBpM4SjtcoZd4qv5aC',
+    product_id: 'prod_Ta1XL52XUjhYRK',
+  },
+  pro: {
+    price_id: 'price_1ScrUdHBpM4SjtcoSMiUvuO4',
+    product_id: 'prod_Ta1XISqaR3sTCg',
+  },
+  fluency_plus: {
+    price_id: 'price_1ScrVBHBpM4Sjtco4pfVTC2v',
+    product_id: 'prod_Ta1YWTtOqI7Rev',
+  },
+};
+
 export const plans: Plan[] = [
   {
     id: 'free_trial',
@@ -25,7 +41,7 @@ export const plans: Plan[] = [
     period: 'month',
     features: [
       'Conversas ilimitadas',
-      '4 cenários disponíveis',
+      '5 cenários disponíveis',
       'Feedback completo',
       'Histórico ilimitado',
     ],
@@ -33,6 +49,7 @@ export const plans: Plan[] = [
     hasAudio: false,
     hasPronunciation: false,
     hasAdvancedAnalytics: false,
+    stripePriceId: 'price_1ScrTzHBpM4SjtcoZd4qv5aC',
   },
   {
     id: 'pro',
@@ -50,6 +67,7 @@ export const plans: Plan[] = [
     hasAudio: true,
     hasPronunciation: true,
     hasAdvancedAnalytics: true,
+    stripePriceId: 'price_1ScrUdHBpM4SjtcoSMiUvuO4',
   },
   {
     id: 'fluency_plus',
@@ -67,6 +85,7 @@ export const plans: Plan[] = [
     hasAudio: true,
     hasPronunciation: true,
     hasAdvancedAnalytics: true,
+    stripePriceId: 'price_1ScrVBHBpM4Sjtco4pfVTC2v',
   },
 ];
 

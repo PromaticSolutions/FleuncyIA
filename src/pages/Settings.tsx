@@ -11,19 +11,25 @@ import {
   Crown,
   ChevronRight,
   Moon,
-  Sun
+  Sun,
+  CreditCard,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { AppLayout } from '@/components/AppLayout';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useApp();
+  const { toast } = useToast();
   
   const [notifications, setNotifications] = useState(true);
   const [sounds, setSounds] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
+  const [loadingPortal, setLoadingPortal] = useState(false);
 
   const planLabels: Record<string, string> = {
     free_trial: 'Free Trial',
@@ -36,6 +42,28 @@ const Settings: React.FC = () => {
     if (confirm('Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.')) {
       logout();
       navigate('/');
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    setLoadingPortal(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('customer-portal');
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Error opening customer portal:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível abrir o portal de assinaturas. Verifique se você possui uma assinatura ativa.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingPortal(false);
     }
   };
 
@@ -54,7 +82,7 @@ const Settings: React.FC = () => {
             
             <button
               onClick={() => navigate('/plans')}
-              className="w-full p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-xl flex items-center gap-4 hover:from-amber-500/20 hover:to-orange-500/20 transition-colors"
+              className="w-full p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-xl flex items-center gap-4 hover:from-amber-500/20 hover:to-orange-500/20 transition-colors mb-3"
             >
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
                 <Crown className="w-6 h-6 text-white" />
@@ -67,6 +95,27 @@ const Settings: React.FC = () => {
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </button>
+
+            {user?.plan !== 'free_trial' && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleManageSubscription}
+                disabled={loadingPortal}
+              >
+                {loadingPortal ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Carregando...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Gerenciar assinatura
+                  </>
+                )}
+              </Button>
+            )}
           </div>
 
           {/* Language Section */}
