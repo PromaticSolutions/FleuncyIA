@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { plans } from '@/data/plans';
 import { useApp } from '@/contexts/AppContext';
-import { ArrowLeft, Check, Crown, Sparkles, Zap, Star } from 'lucide-react';
+import { ArrowLeft, Check, Crown, Sparkles, Zap, Star, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const planIcons = {
   free_trial: Zap,
@@ -24,21 +25,50 @@ const Plans: React.FC = () => {
   const navigate = useNavigate();
   const { user, updateUserProfile } = useApp();
   const { toast } = useToast();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
-  const handleSelectPlan = (planId: string) => {
+  const handleSelectPlan = async (planId: string, stripePriceId?: string) => {
     if (planId === 'free_trial') {
+      updateUserProfile({ plan: planId as any });
       toast({
         title: "Free Trial ativo!",
         description: "Aproveite 7 dias de acesso gratuito.",
       });
-    } else {
-      toast({
-        title: "Plano selecionado",
-        description: "Conecte o Stripe para processar pagamentos.",
-      });
+      navigate('/home');
+      return;
     }
-    updateUserProfile({ plan: planId as any });
-    navigate('/home');
+
+    if (!stripePriceId) {
+      toast({
+        title: "Erro",
+        description: "Plano não disponível para assinatura.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoadingPlan(planId);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { priceId: stripePriceId },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Error creating checkout:', error);
+      toast({
+        title: "Erro ao processar",
+        description: "Não foi possível iniciar o checkout. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingPlan(null);
+    }
   };
 
   return (
@@ -64,6 +94,7 @@ const Plans: React.FC = () => {
         {plans.map((plan) => {
           const Icon = planIcons[plan.id];
           const isCurrentPlan = user?.plan === plan.id;
+          const isLoading = loadingPlan === plan.id;
           
           return (
             <div
@@ -112,12 +143,21 @@ const Plans: React.FC = () => {
                   variant={isCurrentPlan ? 'outline' : 'default'}
                   size="lg"
                   className="w-full"
-                  onClick={() => handleSelectPlan(plan.id)}
-                  disabled={isCurrentPlan}
+                  onClick={() => handleSelectPlan(plan.id, plan.stripePriceId)}
+                  disabled={isCurrentPlan || isLoading}
                 >
-                  {isCurrentPlan ? 'Plano atual' : 
-                   plan.id === 'free_trial' ? 'Começar grátis' : 
-                   `Assinar ${plan.name}`}
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Processando...
+                    </>
+                  ) : isCurrentPlan ? (
+                    'Plano atual'
+                  ) : plan.id === 'free_trial' ? (
+                    'Começar grátis'
+                  ) : (
+                    `Assinar ${plan.name}`
+                  )}
                 </Button>
               </div>
             </div>

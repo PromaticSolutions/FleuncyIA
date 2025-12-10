@@ -78,4 +78,5 @@ export interface Plan {
   hasAudio: boolean;
   hasPronunciation: boolean;
   hasAdvancedAnalytics: boolean;
+  stripePriceId?: string;
 }
