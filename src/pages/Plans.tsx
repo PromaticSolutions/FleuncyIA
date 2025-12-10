@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { plans } from '@/data/plans';
@@ -6,6 +6,7 @@ import { useApp } from '@/contexts/AppContext';
 import { ArrowLeft, Check, Crown, Sparkles, Zap, Star, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import type { Session } from '@supabase/supabase-js';
 
 const planIcons = {
   free_trial: Zap,
@@ -26,6 +27,19 @@ const Plans: React.FC = () => {
   const { user, updateUserProfile } = useApp();
   const { toast } = useToast();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleSelectPlan = async (planId: string, stripePriceId?: string) => {
     if (planId === 'free_trial') {
@@ -44,6 +58,16 @@ const Plans: React.FC = () => {
         description: "Plano não disponível para assinatura.",
         variant: "destructive",
       });
+      return;
+    }
+
+    if (!session) {
+      toast({
+        title: "Faça login primeiro",
+        description: "Você precisa estar logado para assinar um plano.",
+        variant: "destructive",
+      });
+      navigate('/auth');
       return;
     }
 
