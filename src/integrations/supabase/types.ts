@@ -14,7 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      support_tickets: {
+        Row: {
+          category: string | null
+          conversation_history: Json
+          created_at: string
+          description: string
+          id: string
+          resolved_at: string | null
+          status: string
+          updated_at: string
+          user_email: string | null
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          category?: string | null
+          conversation_history?: Json
+          created_at?: string
+          description: string
+          id?: string
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+          user_email?: string | null
+          user_id: string
+          user_name: string
+        }
+        Update: {
+          category?: string | null
+          conversation_history?: Json
+          created_at?: string
+          description?: string
+          id?: string
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+          user_email?: string | null
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

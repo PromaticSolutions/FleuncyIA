@@ -6,6 +6,7 @@ import { useApp } from '@/contexts/AppContext';
 import { ArrowLeft, Check, Crown, Sparkles, Zap, Star, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { HelpButton } from '@/components/HelpButton';
 import type { Session } from '@supabase/supabase-js';
 
 const planIcons = {
@@ -98,23 +99,23 @@ const Plans: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="gradient-primary px-6 pt-12 pb-16 rounded-b-3xl">
-        <div className="flex items-center gap-4 mb-6">
+      <div className="gradient-primary px-4 sm:px-6 pt-8 sm:pt-12 pb-12 sm:pb-16 rounded-b-3xl">
+        <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 max-w-3xl mx-auto">
           <button 
             onClick={() => navigate(-1)}
             className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center"
           >
             <ArrowLeft className="w-5 h-5 text-white" />
           </button>
-          <h1 className="text-xl font-bold text-white">Escolha seu plano</h1>
+          <h1 className="text-lg sm:text-xl font-bold text-white">Escolha seu plano</h1>
         </div>
-        <p className="text-white/80 text-center">
+        <p className="text-white/80 text-center text-sm sm:text-base">
           Desbloqueie todo o potencial do Fluency IA
         </p>
       </div>
 
       {/* Plans */}
-      <div className="px-4 -mt-8 pb-8 space-y-4">
+      <div className="px-4 -mt-6 sm:-mt-8 pb-8 space-y-4 max-w-3xl mx-auto">
         {plans.map((plan) => {
           const Icon = planIcons[plan.id];
           const isCurrentPlan = user?.plan === plan.id;
@@ -188,6 +189,8 @@ const Plans: React.FC = () => {
           );
         })}
       </div>
+
+      <HelpButton />
     </div>
   );
 };

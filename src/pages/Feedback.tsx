@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ConversationFeedback } from '@/types';
 import { scenarios } from '@/data/scenarios';
 import { ArrowLeft, Check, X, TrendingUp, Save, RotateCcw, ChevronRight } from 'lucide-react';
+import { HelpButton } from '@/components/HelpButton';
 
 const Feedback: React.FC = () => {
   const navigate = useNavigate();
@@ -35,8 +36,8 @@ const Feedback: React.FC = () => {
   return (
     <div className="min-h-screen bg-background pb-8">
       {/* Header */}
-      <div className="gradient-primary px-6 pt-12 pb-24 rounded-b-3xl">
-        <div className="flex items-center gap-4 mb-6">
+      <div className="gradient-primary px-4 sm:px-6 pt-8 sm:pt-12 pb-20 sm:pb-24 rounded-b-3xl">
+        <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 max-w-3xl mx-auto">
           <button 
             onClick={() => navigate('/home')}
             className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center"
@@ -44,14 +45,14 @@ const Feedback: React.FC = () => {
             <ArrowLeft className="w-5 h-5 text-white" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-white">Feedback</h1>
+            <h1 className="text-lg sm:text-xl font-bold text-white">Feedback</h1>
             <p className="text-white/80 text-sm">{scenario?.title}</p>
           </div>
         </div>
       </div>
 
       {/* Score Card */}
-      <div className="px-4 -mt-16">
+      <div className="px-4 -mt-14 sm:-mt-16 max-w-3xl mx-auto">
         <div className="bg-card rounded-2xl shadow-fluency-lg p-6 border border-border">
           <div className="text-center mb-6">
             <div className={`text-5xl font-bold ${getScoreColor(feedback.overallScore)} mb-2`}>
@@ -86,7 +87,7 @@ const Feedback: React.FC = () => {
       </div>
 
       {/* Errors Section */}
-      <div className="px-4 mt-6">
+      <div className="px-4 mt-6 max-w-3xl mx-auto">
         <h2 className="text-lg font-bold text-foreground mb-3 flex items-center gap-2">
           <X className="w-5 h-5 text-destructive" />
           Principais Erros
@@ -110,7 +111,7 @@ const Feedback: React.FC = () => {
       </div>
 
       {/* Correct Phrases */}
-      <div className="px-4 mt-6">
+      <div className="px-4 mt-6 max-w-3xl mx-auto">
         <h2 className="text-lg font-bold text-foreground mb-3 flex items-center gap-2">
           <Check className="w-5 h-5 text-success" />
           O que você acertou
@@ -128,7 +129,7 @@ const Feedback: React.FC = () => {
       </div>
 
       {/* Improvements */}
-      <div className="px-4 mt-6">
+      <div className="px-4 mt-6 max-w-3xl mx-auto">
         <h2 className="text-lg font-bold text-foreground mb-3 flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-primary" />
           O que melhorar
@@ -146,7 +147,7 @@ const Feedback: React.FC = () => {
       </div>
 
       {/* Actions */}
-      <div className="px-4 mt-8 space-y-3">
+      <div className="px-4 mt-8 space-y-3 max-w-3xl mx-auto">
         <Button size="lg" className="w-full" onClick={() => navigate('/history')}>
           <Save className="w-5 h-5 mr-2" />
           Salvar conversa
@@ -161,6 +162,8 @@ const Feedback: React.FC = () => {
           Tentar novamente
         </Button>
       </div>
+
+      <HelpButton />
     </div>
   );
 };

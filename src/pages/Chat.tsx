@@ -5,9 +5,11 @@ import { Input } from '@/components/ui/input';
 import { useApp } from '@/contexts/AppContext';
 import { scenarios } from '@/data/scenarios';
 import { Message, Conversation, ConversationFeedback } from '@/types';
-import { ArrowLeft, Send, Mic, Languages, MoreVertical, Loader2 } from 'lucide-react';
+import { ArrowLeft, Send, Mic, MicOff, Languages, MoreVertical, Loader2, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAudioRecorder } from '@/hooks/useAudioRecorder';
+import { HelpButton } from '@/components/HelpButton';
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
@@ -34,6 +36,27 @@ const Chat: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showTranslation, setShowTranslation] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const canUseAudio = user?.plan === 'pro' || user?.plan === 'fluency_plus';
+
+  const { isRecording, isTranscribing, startRecording, stopRecording, cancelRecording } = useAudioRecorder({
+    onTranscription: (text) => {
+      if (text.trim()) {
+        setInputValue(text);
+        toast({
+          title: "Áudio transcrito",
+          description: "Sua mensagem foi convertida em texto.",
+        });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro no áudio",
+        description: error,
+        variant: "destructive",
+      });
+    }
+  });
 
   const scenario = scenarios.find(s => s.id === scenarioId);
 
@@ -91,13 +114,11 @@ const Chat: React.FC = () => {
         throw new Error(errorData.error || 'Failed to get response');
       }
 
-      // Stream the response
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let assistantContent = '';
       let assistantMessageId = (Date.now() + 1).toString();
 
-      // Add empty assistant message
       setMessages(prev => [...prev, {
         id: assistantMessageId,
         role: 'assistant',
@@ -138,7 +159,7 @@ const Chat: React.FC = () => {
                 ));
               }
             } catch {
-              // Incomplete JSON, will be completed with more data
+              // Incomplete JSON
             }
           }
         }
@@ -150,7 +171,6 @@ const Chat: React.FC = () => {
         description: error instanceof Error ? error.message : "Não foi possível obter resposta.",
         variant: "destructive",
       });
-      // Remove the typing indicator on error
       setMessages(prev => prev.filter(m => m.role !== 'assistant' || m.content !== ''));
     } finally {
       setIsTyping(false);
@@ -229,62 +249,66 @@ const Chat: React.FC = () => {
     }
   };
 
-  const handleMic = () => {
-    if (user?.plan === 'free_trial' || user?.plan === 'beginner') {
+  const handleMicClick = () => {
+    if (!canUseAudio) {
       toast({
         title: "Recurso Premium",
         description: "Faça upgrade para usar áudio.",
       });
       navigate('/plans');
+      return;
+    }
+
+    if (isRecording) {
+      stopRecording();
     } else {
-      toast({
-        title: "Gravando...",
-        description: "Fale agora.",
-      });
+      startRecording();
     }
   };
 
   if (!scenario) {
-    return <div>Cenário não encontrado</div>;
+    return <div className="min-h-screen flex items-center justify-center">Cenário não encontrado</div>;
   }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <div className="bg-card border-b border-border px-4 py-3 flex items-center gap-3">
+      <div className="bg-card border-b border-border px-3 py-3 flex items-center gap-2 sm:px-4 sm:gap-3">
         <button 
           onClick={() => navigate('/home')}
-          className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center"
+          className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shrink-0"
         >
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
-        <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${scenario.color} flex items-center justify-center`}>
+        <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${scenario.color} flex items-center justify-center shrink-0`}>
           <span className="text-xl">{scenario.icon}</span>
         </div>
-        <div className="flex-1">
-          <h1 className="font-semibold text-foreground">{scenario.title}</h1>
-          <p className="text-xs text-muted-foreground">{isTyping ? 'Digitando...' : 'Online'}</p>
+        <div className="flex-1 min-w-0">
+          <h1 className="font-semibold text-foreground truncate">{scenario.title}</h1>
+          <p className="text-xs text-muted-foreground">
+            {isTyping ? 'Digitando...' : isRecording ? 'Gravando...' : 'Online'}
+          </p>
         </div>
-        <button className="w-10 h-10 rounded-xl hover:bg-muted flex items-center justify-center">
+        <button className="w-10 h-10 rounded-xl hover:bg-muted flex items-center justify-center shrink-0">
           <MoreVertical className="w-5 h-5 text-muted-foreground" />
         </button>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3 sm:px-4">
         {messages.map((message) => (
           <div
             key={message.id}
             className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+              className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-3 ${
                 message.role === 'user'
                   ? 'gradient-primary text-white rounded-br-md'
                   : 'bg-muted text-foreground rounded-bl-md'
               }`}
             >
-              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+              <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
               <div className="flex items-center justify-end gap-2 mt-1">
                 <span className={`text-xs ${message.role === 'user' ? 'text-white/70' : 'text-muted-foreground'}`}>
                   {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -315,29 +339,56 @@ const Chat: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Recording indicator */}
+      {isRecording && (
+        <div className="px-4 py-2 bg-destructive/10 border-t border-destructive/20 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 bg-destructive rounded-full animate-pulse" />
+            <span className="text-sm text-destructive font-medium">Gravando...</span>
+          </div>
+          <Button variant="ghost" size="sm" onClick={cancelRecording}>
+            <X className="w-4 h-4 mr-1" />
+            Cancelar
+          </Button>
+        </div>
+      )}
+
+      {/* Transcribing indicator */}
+      {isTranscribing && (
+        <div className="px-4 py-2 bg-primary/10 border-t border-primary/20 flex items-center gap-2">
+          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+          <span className="text-sm text-primary font-medium">Transcrevendo áudio...</span>
+        </div>
+      )}
+
       {/* Input Area */}
-      <div className="bg-card border-t border-border px-4 py-3 space-y-3">
+      <div className="bg-card border-t border-border px-3 py-3 space-y-3 sm:px-4">
         <div className="flex items-center gap-2">
           <div className="flex-1 relative">
             <Input
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Digite sua mensagem em inglês..."
+              placeholder="Digite sua mensagem..."
               className="pr-12"
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              disabled={isTyping}
+              disabled={isTyping || isRecording || isTranscribing}
             />
             <button
-              onClick={handleMic}
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg hover:bg-muted flex items-center justify-center"
+              onClick={handleMicClick}
+              disabled={isTranscribing}
+              className={`absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                isRecording 
+                  ? 'bg-destructive text-white' 
+                  : 'hover:bg-muted text-muted-foreground'
+              }`}
             >
-              <Mic className="w-5 h-5 text-muted-foreground" />
+              {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
             </button>
           </div>
           <Button 
             size="icon" 
             onClick={handleSendMessage}
-            disabled={!inputValue.trim() || isTyping}
+            disabled={!inputValue.trim() || isTyping || isRecording || isTranscribing}
           >
             <Send className="w-5 h-5" />
           </Button>
@@ -359,6 +410,8 @@ const Chat: React.FC = () => {
           )}
         </Button>
       </div>
+
+      <HelpButton />
     </div>
   );
 };
