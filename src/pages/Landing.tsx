@@ -253,12 +253,12 @@ const Landing: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-4 xl:gap-6">
             <PricingCard 
               name="Free Trial"
-              price="R$ 0"
-              period="7 dias"
-              features={['2 cenários', '10 mensagens/dia', 'Feedback básico']}
+              price="Grátis"
+              period="por 7 dias"
+              features={['2 cenários disponíveis', '10 mensagens por dia', 'Feedback básico']}
               ctaText="Começar Grátis"
               onClick={() => navigate('/auth')}
             />
@@ -266,26 +266,28 @@ const Landing: React.FC = () => {
               name="Beginner"
               price="R$ 14,99"
               period="/mês"
-              features={['4 cenários', 'Conversas ilimitadas', 'Feedback completo', 'Histórico ilimitado']}
-              ctaText="Assinar"
+              features={['5 cenários disponíveis', 'Conversas ilimitadas', 'Feedback completo', 'Histórico ilimitado']}
+              ctaText="Assinar Agora"
               onClick={() => navigate('/auth')}
             />
             <PricingCard 
               name="Pro"
               price="R$ 27,99"
               period="/mês"
-              features={['6 cenários', 'Tudo do Beginner', 'Suporte a áudio', 'Análises avançadas']}
-              ctaText="Assinar"
+              features={['7 cenários disponíveis', 'Suporte a áudio', 'Avaliação de pronúncia', 'Análises avançadas']}
+              ctaText="Assinar Pro"
               onClick={() => navigate('/auth')}
               highlighted
+              badge="Mais Popular"
             />
             <PricingCard 
               name="Fluency Plus"
               price="R$ 150"
               period="/ano"
-              features={['Todos os cenários', 'Tudo do Pro', 'Exportar PDF', 'Suporte prioritário']}
+              features={['Todos os 8 cenários', 'Tudo do Pro incluso', 'Exportar em PDF', 'Suporte prioritário']}
               ctaText="Assinar Anual"
               onClick={() => navigate('/auth')}
+              badge="Melhor Valor"
             />
           </div>
         </div>
@@ -377,34 +379,46 @@ const PricingCard: React.FC<{
   ctaText: string;
   onClick: () => void;
   highlighted?: boolean;
-}> = ({ name, price, period, features, ctaText, onClick, highlighted }) => (
-  <div className={`p-6 rounded-2xl border ${
+  badge?: string;
+}> = ({ name, price, period, features, ctaText, onClick, highlighted, badge }) => (
+  <div className={`relative flex flex-col p-6 rounded-2xl border transition-all duration-300 hover:shadow-fluency-md ${
     highlighted 
-      ? 'gradient-primary border-transparent' 
-      : 'bg-card border-border'
+      ? 'gradient-primary border-transparent scale-[1.02] shadow-fluency-lg' 
+      : 'bg-card border-border hover:border-primary/30'
   }`}>
-    <h3 className={`font-semibold text-lg mb-2 ${highlighted ? 'text-white' : 'text-foreground'}`}>
-      {name}
-    </h3>
+    {badge && (
+      <div className={`absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-semibold ${
+        highlighted ? 'bg-white text-primary' : 'bg-primary text-primary-foreground'
+      }`}>
+        {badge}
+      </div>
+    )}
     <div className="mb-4">
-      <span className={`text-3xl font-bold ${highlighted ? 'text-white' : 'text-foreground'}`}>
-        {price}
-      </span>
-      <span className={highlighted ? 'text-white/70' : 'text-muted-foreground'}>{period}</span>
+      <h3 className={`font-semibold text-lg mb-3 ${highlighted ? 'text-white' : 'text-foreground'}`}>
+        {name}
+      </h3>
+      <div className="flex items-baseline gap-1">
+        <span className={`text-3xl font-bold ${highlighted ? 'text-white' : 'text-foreground'}`}>
+          {price}
+        </span>
+        <span className={`text-sm ${highlighted ? 'text-white/70' : 'text-muted-foreground'}`}>
+          {period}
+        </span>
+      </div>
     </div>
-    <ul className="space-y-3 mb-6">
+    <ul className="space-y-3 mb-6 flex-1">
       {features.map((feature, i) => (
-        <li key={i} className={`flex items-center gap-2 text-sm ${
+        <li key={i} className={`flex items-start gap-2 text-sm ${
           highlighted ? 'text-white/90' : 'text-muted-foreground'
         }`}>
-          <CheckCircle className={`w-4 h-4 ${highlighted ? 'text-white' : 'text-success'}`} />
-          {feature}
+          <CheckCircle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${highlighted ? 'text-white' : 'text-success'}`} />
+          <span>{feature}</span>
         </li>
       ))}
     </ul>
     <Button 
       onClick={onClick}
-      className={`w-full ${highlighted ? 'bg-white text-primary hover:bg-white/90' : ''}`}
+      className={`w-full font-medium ${highlighted ? 'bg-white text-primary hover:bg-white/90' : ''}`}
       variant={highlighted ? 'default' : 'outline'}
     >
       {ctaText}
