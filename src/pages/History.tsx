@@ -1,13 +1,27 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
+import { useConversations } from '@/hooks/useConversations';
 import { scenarios } from '@/data/scenarios';
-import { Calendar, Clock, Star, ChevronRight, MessageSquare } from 'lucide-react';
+import { Calendar, Clock, Star, ChevronRight, MessageSquare, Loader2 } from 'lucide-react';
 import { AppLayout } from '@/components/AppLayout';
+import { supabase } from '@/integrations/supabase/client';
 
 const History: React.FC = () => {
   const navigate = useNavigate();
-  const { conversations } = useApp();
+  const { user } = useApp();
+  const [authUserId, setAuthUserId] = useState<string | undefined>(undefined);
+  
+  // Get authenticated user ID
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      setAuthUserId(authUser?.id);
+    };
+    getUser();
+  }, []);
+  
+  const { conversations, isLoading, error } = useConversations(authUserId);
 
   const getScenario = (id: string) => scenarios.find(s => s.id === id);
 
@@ -33,7 +47,22 @@ const History: React.FC = () => {
           <p className="text-muted-foreground">Suas conversas anteriores e feedbacks</p>
         </div>
 
-        {conversations.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-16 bg-card rounded-xl border border-border">
+            <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Carregando conversas...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-16 bg-card rounded-xl border border-border">
+            <p className="text-destructive mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 gradient-primary text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
+            >
+              Tentar novamente
+            </button>
+          </div>
+        ) : conversations.length === 0 ? (
           <div className="text-center py-16 bg-card rounded-xl border border-border">
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
               <MessageSquare className="w-8 h-8 text-muted-foreground" />
@@ -80,6 +109,10 @@ const History: React.FC = () => {
                       <span className="flex items-center gap-1.5">
                         <Clock className="w-4 h-4" />
                         {duration} min
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <MessageSquare className="w-4 h-4" />
+                        {conversation.messages.length} msgs
                       </span>
                     </div>
                   </div>

@@ -5,10 +5,14 @@ import { Input } from '@/components/ui/input';
 import { useApp } from '@/contexts/AppContext';
 import { scenarios } from '@/data/scenarios';
 import { Message, Conversation, ConversationFeedback } from '@/types';
-import { ArrowLeft, Send, Mic, MicOff, Languages, MoreVertical, Loader2, X } from 'lucide-react';
+import { ArrowLeft, Send, Mic, MicOff, Languages, MoreVertical, Loader2, X, Volume2, VolumeX } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
+import { useCredits } from '@/hooks/useCredits';
+import { useConversations } from '@/hooks/useConversations';
+import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
+import { CreditsDisplay } from '@/components/CreditsDisplay';
 import { HelpButton } from '@/components/HelpButton';
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
@@ -27,7 +31,7 @@ const scenarioInitialMessages: Record<string, string> = {
 const Chat: React.FC = () => {
   const navigate = useNavigate();
   const { scenarioId } = useParams<{ scenarioId: string }>();
-  const { user, addConversation } = useApp();
+  const { user } = useApp();
   const { toast } = useToast();
   
   const [messages, setMessages] = useState<Message[]>([]);
@@ -35,9 +39,26 @@ const Chat: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showTranslation, setShowTranslation] = useState<string | null>(null);
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [conversationId] = useState(() => crypto.randomUUID());
+  const [authUserId, setAuthUserId] = useState<string | undefined>(undefined);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Get authenticated user ID
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      setAuthUserId(authUser?.id);
+    };
+    getUser();
+  }, []);
+
   const canUseAudio = user?.plan === 'pro' || user?.plan === 'fluency_plus';
+
+  // Hooks for credits, conversations, and speech
+  const { credits, useCredit, canSendMessage, hasUnlimitedCredits } = useCredits(authUserId, user?.plan);
+  const { saveConversation } = useConversations(authUserId);
+  const { speak, stop, isSpeaking, isSupported: isSpeechSupported } = useSpeechSynthesis({ lang: 'en-US', rate: 0.9 });
 
   const { isRecording, isTranscribing, startRecording, stopRecording, cancelRecording } = useAudioRecorder({
     onTranscription: (text) => {
@@ -69,6 +90,11 @@ const Chat: React.FC = () => {
         timestamp: new Date(),
       };
       setMessages([initialMessage]);
+      
+      // Speak initial message if voice is enabled
+      if (voiceEnabled && isSpeechSupported) {
+        speak(initialMessage.content);
+      }
     }
   }, [scenario]);
 
@@ -78,6 +104,30 @@ const Chat: React.FC = () => {
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isTyping) return;
+
+    // Check credits before sending
+    if (!canSendMessage()) {
+      toast({
+        title: "Sem créditos",
+        description: credits?.is_trial_expired 
+          ? "Seu período de trial expirou. Faça upgrade para continuar." 
+          : "Você atingiu o limite de mensagens. Faça upgrade para continuar.",
+        variant: "destructive",
+      });
+      navigate('/plans');
+      return;
+    }
+
+    // Deduct credit
+    const creditUsed = await useCredit();
+    if (!creditUsed && !hasUnlimitedCredits) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível processar sua mensagem.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -164,6 +214,11 @@ const Chat: React.FC = () => {
           }
         }
       }
+
+      // Speak assistant response if voice is enabled
+      if (voiceEnabled && isSpeechSupported && assistantContent) {
+        speak(assistantContent);
+      }
     } catch (error) {
       console.error('Chat error:', error);
       toast({
@@ -214,7 +269,7 @@ const Chat: React.FC = () => {
       };
 
       const conversation: Conversation = {
-        id: Date.now().toString(),
+        id: conversationId,
         scenarioId: scenarioId || '',
         userId: user?.id || '',
         messages,
@@ -223,7 +278,9 @@ const Chat: React.FC = () => {
         feedback,
       };
 
-      addConversation(conversation);
+      // Save to database
+      await saveConversation(conversation);
+      
       navigate('/feedback', { state: { feedback, scenarioId } });
     } catch (error) {
       console.error('Analysis error:', error);
@@ -266,6 +323,25 @@ const Chat: React.FC = () => {
     }
   };
 
+  const toggleVoice = () => {
+    if (isSpeaking) {
+      stop();
+    }
+    setVoiceEnabled(!voiceEnabled);
+    toast({
+      title: voiceEnabled ? "Voz desativada" : "Voz ativada",
+      description: voiceEnabled ? "A IA não falará mais as respostas." : "A IA falará as respostas em inglês.",
+    });
+  };
+
+  const handleSpeakMessage = (content: string) => {
+    if (isSpeaking) {
+      stop();
+    } else {
+      speak(content);
+    }
+  };
+
   if (!scenario) {
     return <div className="min-h-screen flex items-center justify-center">Cenário não encontrado</div>;
   }
@@ -286,13 +362,41 @@ const Chat: React.FC = () => {
         <div className="flex-1 min-w-0">
           <h1 className="font-semibold text-foreground truncate">{scenario.title}</h1>
           <p className="text-xs text-muted-foreground">
-            {isTyping ? 'Digitando...' : isRecording ? 'Gravando...' : 'Online'}
+            {isTyping ? 'Digitando...' : isRecording ? 'Gravando...' : isSpeaking ? 'Falando...' : 'Online'}
           </p>
         </div>
+        
+        {/* Voice toggle button */}
+        {isSpeechSupported && (
+          <button 
+            onClick={toggleVoice}
+            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+              voiceEnabled ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-muted-foreground'
+            }`}
+            title={voiceEnabled ? "Desativar voz" : "Ativar voz"}
+          >
+            {voiceEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+          </button>
+        )}
+        
         <button className="w-10 h-10 rounded-xl hover:bg-muted flex items-center justify-center shrink-0">
           <MoreVertical className="w-5 h-5 text-muted-foreground" />
         </button>
       </div>
+
+      {/* Credits Display */}
+      {credits && (
+        <div className="px-4 py-2 border-b border-border bg-card/50">
+          <CreditsDisplay
+            totalCredits={credits.total_credits}
+            usedCredits={credits.used_credits}
+            remainingCredits={credits.remaining_credits}
+            trialEndsAt={credits.trial_ends_at}
+            isExpired={credits.is_trial_expired}
+            hasUnlimitedCredits={hasUnlimitedCredits}
+          />
+        </div>
+      )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3 sm:px-4">
@@ -314,12 +418,22 @@ const Chat: React.FC = () => {
                   {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
                 {message.role === 'assistant' && (
-                  <button
-                    onClick={() => handleTranslate(message.id, message.content)}
-                    className="text-xs text-primary hover:underline"
-                  >
-                    <Languages className="w-4 h-4" />
-                  </button>
+                  <>
+                    <button
+                      onClick={() => handleTranslate(message.id, message.content)}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      <Languages className="w-4 h-4" />
+                    </button>
+                    {isSpeechSupported && (
+                      <button
+                        onClick={() => handleSpeakMessage(message.content)}
+                        className={`text-xs hover:underline ${isSpeaking ? 'text-primary' : 'text-muted-foreground'}`}
+                      >
+                        <Volume2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             </div>

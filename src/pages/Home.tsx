@@ -1,14 +1,29 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
 import { scenarios, isScenarioLocked } from '@/data/scenarios';
-import { Lock, TrendingUp, Target, BookOpen } from 'lucide-react';
+import { Lock, TrendingUp, Target, BookOpen, MessageSquare } from 'lucide-react';
 import { Scenario } from '@/types';
 import { AppLayout } from '@/components/AppLayout';
+import { useCredits } from '@/hooks/useCredits';
+import { supabase } from '@/integrations/supabase/client';
+import { CreditsDisplay } from '@/components/CreditsDisplay';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useApp();
+  const [authUserId, setAuthUserId] = useState<string | undefined>(undefined);
+
+  // Get authenticated user ID
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      setAuthUserId(authUser?.id);
+    };
+    getUser();
+  }, []);
+
+  const { credits, hasUnlimitedCredits } = useCredits(authUserId, user?.plan);
 
   const languageLabels: Record<string, string> = {
     english: 'Inglês',
@@ -36,13 +51,28 @@ const Home: React.FC = () => {
     <AppLayout>
       <div className="p-6 lg:p-8 max-w-7xl mx-auto">
         {/* Welcome Section */}
-        <div className="mb-8">
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
-            Bem-vindo de volta, {user?.name?.split(' ')[0] || 'Estudante'}
-          </h1>
-          <p className="text-muted-foreground">
-            Continue praticando para alcançar suas metas semanais
-          </p>
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
+              Bem-vindo de volta, {user?.name?.split(' ')[0] || 'Estudante'}
+            </h1>
+            <p className="text-muted-foreground">
+              Continue praticando para alcançar suas metas semanais
+            </p>
+          </div>
+          
+          {/* Credits Display */}
+          {credits && (
+            <CreditsDisplay
+              totalCredits={credits.total_credits}
+              usedCredits={credits.used_credits}
+              remainingCredits={credits.remaining_credits}
+              trialEndsAt={credits.trial_ends_at}
+              isExpired={credits.is_trial_expired}
+              hasUnlimitedCredits={hasUnlimitedCredits}
+              className="self-start"
+            />
+          )}
         </div>
 
         {/* Stats Cards */}

@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversations: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          feedback: Json | null
+          id: string
+          messages: Json
+          scenario_id: string
+          started_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          feedback?: Json | null
+          id?: string
+          messages?: Json
+          scenario_id: string
+          started_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          feedback?: Json | null
+          id?: string
+          messages?: Json
+          scenario_id?: string
+          started_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       support_tickets: {
         Row: {
           category: string | null
@@ -53,6 +89,39 @@ export type Database = {
           user_email?: string | null
           user_id?: string
           user_name?: string
+        }
+        Relationships: []
+      }
+      user_credits: {
+        Row: {
+          created_at: string
+          id: string
+          total_credits: number
+          trial_ends_at: string
+          trial_started_at: string
+          updated_at: string
+          used_credits: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          total_credits?: number
+          trial_ends_at?: string
+          trial_started_at?: string
+          updated_at?: string
+          used_credits?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          total_credits?: number
+          trial_ends_at?: string
+          trial_started_at?: string
+          updated_at?: string
+          used_credits?: number
+          user_id?: string
         }
         Relationships: []
       }
