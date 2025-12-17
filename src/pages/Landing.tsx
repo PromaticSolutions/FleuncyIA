@@ -162,6 +162,69 @@ const Landing: React.FC = () => {
         </div>
       </section>
 
+      {/* TBLT Methodology Section */}
+      <section className="py-20 px-6">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Como funciona nosso método de ensino
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Aprendizado baseado em tarefas reais (Task-Based Language Teaching)
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <MethodCard 
+              emoji="🍽️"
+              scenario="Restaurante"
+              subtitle="Método TBLT"
+              badge="Aprendizado por Tarefas"
+              messages={[
+                { role: 'ai', text: "Welcome! What would you like to order today?" },
+                { role: 'user', text: "I'd like a main course and a drink, please." },
+                { role: 'ai', text: "Great choice. Would you like to see today's specials?" }
+              ]}
+              objective="Completar um pedido"
+              method="Task-Based Learning"
+              feedback="Comunicação e clareza"
+            />
+            <MethodCard 
+              emoji="✈️"
+              scenario="Viagem"
+              subtitle="Método TBLT"
+              badge="Aprendizado por Tarefas"
+              messages={[
+                { role: 'ai', text: "Good morning! May I see your boarding pass, please?" },
+                { role: 'user', text: "Sure, here it is. Can I have a window seat?" },
+                { role: 'ai', text: "Let me check availability. Yes, seat 12A is free." }
+              ]}
+              objective="Fazer check-in no aeroporto"
+              method="Task-Based Learning"
+              feedback="Vocabulário e contexto"
+            />
+            <MethodCard 
+              emoji="💼"
+              scenario="Reunião de Trabalho"
+              subtitle="Método TBLT"
+              badge="Aprendizado por Tarefas"
+              messages={[
+                { role: 'ai', text: "Let's discuss the quarterly results. Any thoughts?" },
+                { role: 'user', text: "I believe we should focus on the marketing budget." },
+                { role: 'ai', text: "Good point. Can you elaborate on your proposal?" }
+              ]}
+              objective="Participar de uma reunião"
+              method="Task-Based Learning"
+              feedback="Fluência e formalidade"
+            />
+          </div>
+
+          <p className="text-center text-sm text-muted-foreground mt-8">
+            Método amplamente adotado em universidades de referência e programas de ensino de idiomas.
+          </p>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section id="features" className="py-20 px-6">
         <div className="container mx-auto max-w-6xl">
@@ -423,6 +486,70 @@ const PricingCard: React.FC<{
     >
       {ctaText}
     </Button>
+  </div>
+);
+
+type MessageType = { role: 'ai' | 'user'; text: string };
+
+const MethodCard: React.FC<{ 
+  emoji: string;
+  scenario: string;
+  subtitle: string;
+  badge: string;
+  messages: MessageType[];
+  objective: string;
+  method: string;
+  feedback: string;
+}> = ({ emoji, scenario, subtitle, badge, messages, objective, method, feedback }) => (
+  <div className="relative bg-card rounded-2xl border border-border p-6 shadow-fluency-md hover:shadow-fluency-lg transition-all duration-300">
+    <div className="absolute -top-3 right-4 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+      {badge}
+    </div>
+    
+    <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
+      <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center">
+        <span className="text-lg">{emoji}</span>
+      </div>
+      <div>
+        <p className="font-semibold text-foreground">Cenário: {scenario}</p>
+        <p className="text-xs text-muted-foreground">{subtitle}</p>
+      </div>
+    </div>
+    
+    <div className="space-y-3 mb-4">
+      {messages.map((msg, i) => (
+        msg.role === 'ai' ? (
+          <div key={i} className="flex gap-2">
+            <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs">🤖</div>
+            <div className="flex-1 bg-muted rounded-xl rounded-tl-sm p-2.5">
+              <p className="text-sm text-foreground">{msg.text}</p>
+            </div>
+          </div>
+        ) : (
+          <div key={i} className="flex gap-2 justify-end">
+            <div className="flex-1 max-w-[85%] gradient-primary rounded-xl rounded-tr-sm p-2.5">
+              <p className="text-sm text-white">{msg.text}</p>
+            </div>
+            <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs">👤</div>
+          </div>
+        )
+      ))}
+    </div>
+
+    <div className="pt-4 border-t border-border space-y-1.5">
+      <div className="flex items-center gap-2 text-xs">
+        <span className="text-muted-foreground">Objetivo:</span>
+        <span className="text-foreground font-medium">{objective}</span>
+      </div>
+      <div className="flex items-center gap-2 text-xs">
+        <span className="text-muted-foreground">Método:</span>
+        <span className="text-foreground font-medium">{method}</span>
+      </div>
+      <div className="flex items-center gap-2 text-xs">
+        <span className="text-muted-foreground">Feedback:</span>
+        <span className="text-foreground font-medium">{feedback}</span>
+      </div>
+    </div>
   </div>
 );
 
