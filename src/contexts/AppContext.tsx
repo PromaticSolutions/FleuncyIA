@@ -134,78 +134,75 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, []);
 
-  // Inicializar autenticação
+  // Inicializar autenticação (evita loop / múltiplos listeners)
   useEffect(() => {
-    // Verificar sessão inicial primeiro
-    const initializeAuth = async () => {
-      try {
-        console.log('[AppContext] Initializing auth...');
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user) {
-          console.log('[AppContext] Found existing session:', session.user.id);
-          setAuthUserId(session.user.id);
-          await loadUserProfile(
-            session.user.id,
-            session.user.email || '',
-            session.user.user_metadata?.name || 'Usuário'
-          );
-        } else {
-          console.log('[AppContext] No existing session');
-        }
-      } catch (error) {
-        console.error('[AppContext] Error initializing auth:', error);
-      } finally {
+    let cancelled = false;
+
+    const clearState = () => {
+      setAuthUserId(null);
+      setUser(null);
+      setHasCompletedOnboarding(false);
+      setConversations([]);
+      setCurrentConversation(null);
+    };
+
+    const handleSession = async (session: any) => {
+      if (!session?.user) {
+        clearState();
+        if (!cancelled) setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      setAuthUserId(session.user.id);
+
+      await loadUserProfile(
+        session.user.id,
+        session.user.email || '',
+        session.user.user_metadata?.name || 'Usuário'
+      );
+
+      if (!cancelled) {
         isInitialized.current = true;
         setIsLoading(false);
       }
     };
 
-    initializeAuth();
-
-    // Configurar listener para mudanças de auth
+    // Listener primeiro (evita perder eventos)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('[AppContext] Auth state changed:', event);
-      
-      // Ignorar evento inicial se já processamos via getSession
-      if (!isInitialized.current && event === 'INITIAL_SESSION') {
-        return;
-      }
-      
+
+      // Evita dupla carga (o getSession abaixo já faz a primeira)
+      if (event === 'INITIAL_SESSION') return;
+
       if (event === 'SIGNED_OUT') {
-        setAuthUserId(null);
-        setUser(null);
-        setHasCompletedOnboarding(false);
-        setConversations([]);
-        setCurrentConversation(null);
-        setIsLoading(false);
+        clearState();
+        if (!cancelled) setIsLoading(false);
         return;
       }
-      
-      if (session?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
-        // Verificar se já estamos carregando este usuário
-        if (authUserId === session.user.id && user) {
-          console.log('[AppContext] User already loaded, skipping');
-          return;
-        }
-        
-        setAuthUserId(session.user.id);
-        setIsLoading(true);
-        
-        await loadUserProfile(
-          session.user.id,
-          session.user.email || '',
-          session.user.user_metadata?.name || 'Usuário'
-        );
-        
-        setIsLoading(false);
-      }
+
+      await handleSession(session);
     });
 
+    // Carga inicial
+    (async () => {
+      try {
+        console.log('[AppContext] Initializing auth...');
+        const { data: { session } } = await supabase.auth.getSession();
+        if (cancelled) return;
+        await handleSession(session);
+      } catch (error) {
+        console.error('[AppContext] Error initializing auth:', error);
+        clearState();
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
+
     return () => {
+      cancelled = true;
       subscription.unsubscribe();
     };
-  }, [loadUserProfile, authUserId, user]);
+  }, [loadUserProfile]);
 
   const addConversation = (conversation: Conversation) => {
     setConversations(prev => [conversation, ...prev]);
@@ -250,7 +247,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       value={{
         user,
         setUser,
-        isAuthenticated: !!authUserId && !!user,
+        isAuthenticated: !!authUserId,
         authUserId,
         conversations,
         addConversation,
