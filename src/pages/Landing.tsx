@@ -368,8 +368,8 @@ const Landing: React.FC = () => {
             </p>
             <Button 
               size="xl" 
+              variant="white"
               onClick={() => navigate('/auth')}
-              className="bg-white text-primary hover:bg-white/90"
             >
               Começar Agora — É Grátis
               <ArrowRight className="w-5 h-5 ml-2" />
@@ -481,8 +481,8 @@ const PricingCard: React.FC<{
     </ul>
     <Button 
       onClick={onClick}
-      className={`w-full font-medium ${highlighted ? 'bg-white text-primary hover:bg-white/90' : ''}`}
-      variant={highlighted ? 'default' : 'outline'}
+      className={`w-full font-medium ${highlighted ? '!bg-white !text-primary hover:!bg-white/90 shadow-md' : ''}`}
+      variant={highlighted ? 'secondary' : 'outline'}
     >
       {ctaText}
     </Button>
