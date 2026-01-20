@@ -1,29 +1,28 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
 import { scenarios, isScenarioLocked } from '@/data/scenarios';
-import { Lock, TrendingUp, Target, BookOpen, MessageSquare } from 'lucide-react';
+import { Lock, TrendingUp, Target, BookOpen } from 'lucide-react';
 import { Scenario } from '@/types';
 import { AppLayout } from '@/components/AppLayout';
 import { useCredits } from '@/hooks/useCredits';
-import { supabase } from '@/integrations/supabase/client';
 import { CreditsDisplay } from '@/components/CreditsDisplay';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useApp();
-  const [authUserId, setAuthUserId] = useState<string | undefined>(undefined);
+  const { user, isAuthenticated, hasCompletedOnboarding, isLoading, authUserId } = useApp();
+  const { credits, hasUnlimitedCredits } = useCredits(authUserId || undefined, user?.plan);
 
-  // Get authenticated user ID
+  // Redirecionar se não estiver autenticado ou não completou onboarding
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      setAuthUserId(authUser?.id);
-    };
-    getUser();
-  }, []);
-
-  const { credits, hasUnlimitedCredits } = useCredits(authUserId, user?.plan);
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        navigate('/auth');
+      } else if (!hasCompletedOnboarding) {
+        navigate('/onboarding');
+      }
+    }
+  }, [isAuthenticated, hasCompletedOnboarding, isLoading, navigate]);
 
   const languageLabels: Record<string, string> = {
     english: 'Inglês',
@@ -80,13 +79,13 @@ const Home: React.FC = () => {
           <StatCard
             icon={<BookOpen className="w-5 h-5" />}
             label="Idioma"
-            value={user ? languageLabels[user.language] : '-'}
+            value={user?.language ? languageLabels[user.language] || user.language : 'Não definido'}
             color="bg-primary/10 text-primary"
           />
           <StatCard
             icon={<Target className="w-5 h-5" />}
             label="Nível"
-            value={user ? levelLabels[user.level] : '-'}
+            value={user?.level ? levelLabels[user.level] || user.level : 'Não definido'}
             color="bg-secondary/10 text-secondary"
           />
           <StatCard
