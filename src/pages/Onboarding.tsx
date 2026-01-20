@@ -55,17 +55,19 @@ const Onboarding: React.FC = () => {
         const selectedLevelData = levels.find(l => l.id === selectedLevel);
         const adaptiveLevel = selectedLevelData?.adaptiveLevel || 'B1';
 
-        // Salvar no banco de dados
+        // Usar upsert para garantir que funcione mesmo se o perfil não existir
         const { error } = await supabase
           .from('user_profiles')
-          .update({
+          .upsert({
+            user_id: authUserId,
             language: selectedLanguage,
             level: selectedLevel,
             weekly_goal: selectedGoal,
             has_completed_onboarding: true,
             current_adaptive_level: adaptiveLevel,
-          })
-          .eq('user_id', authUserId);
+          }, { 
+            onConflict: 'user_id' 
+          });
 
         if (error) throw error;
 

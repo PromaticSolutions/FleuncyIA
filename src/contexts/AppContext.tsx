@@ -54,25 +54,31 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         });
         setHasCompletedOnboarding(profileData.has_completed_onboarding);
       } else {
-        // Criar perfil para novo usuário
-        const { data: newProfile, error: insertError } = await supabase
+        // Perfil será criado automaticamente pelo trigger do banco
+        // Aguardar um momento e tentar novamente
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const { data: retryProfile } = await supabase
           .from('user_profiles')
-          .insert({
-            user_id: userId,
-            name: authName,
-            email: authEmail,
-            language: 'english',
-            level: 'basic',
-            weekly_goal: 5,
-            plan: 'free_trial',
-            has_completed_onboarding: false,
-          })
-          .select()
-          .single();
-
-        if (insertError) {
-          console.error('Error creating profile:', insertError);
-          // Usar dados padrão
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
+        
+        if (retryProfile) {
+          setUser({
+            id: userId,
+            name: retryProfile.name || authName,
+            email: retryProfile.email || authEmail,
+            language: retryProfile.language as Language,
+            level: retryProfile.level as Level,
+            weeklyGoal: retryProfile.weekly_goal as WeeklyGoal,
+            plan: retryProfile.plan as PlanType,
+            createdAt: new Date(retryProfile.created_at),
+          });
+          setHasCompletedOnboarding(retryProfile.has_completed_onboarding);
+        } else {
+          // Fallback: usar dados padrão se o trigger falhar
+          console.warn('Profile not found, using defaults');
           setUser({
             id: userId,
             name: authName,
@@ -84,28 +90,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             createdAt: new Date(),
           });
           setHasCompletedOnboarding(false);
-        } else if (newProfile) {
-          setUser({
-            id: userId,
-            name: newProfile.name,
-            email: newProfile.email || authEmail,
-            language: newProfile.language as Language,
-            level: newProfile.level as Level,
-            weeklyGoal: newProfile.weekly_goal as WeeklyGoal,
-            plan: newProfile.plan as PlanType,
-            createdAt: new Date(newProfile.created_at),
-          });
-          setHasCompletedOnboarding(false);
-
-          // Criar settings padrão
-          await supabase
-            .from('user_settings')
-            .insert({
-              user_id: userId,
-              theme: 'light',
-              notifications_enabled: true,
-              voice_enabled: false,
-            });
         }
       }
     } catch (err) {
