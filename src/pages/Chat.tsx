@@ -94,6 +94,7 @@ const Chat: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [instantFeedbacks, setInstantFeedbacks] = useState<Record<string, InstantFeedback>>({});
   const [inputValue, setInputValue] = useState('');
+  const [isFromAudio, setIsFromAudio] = useState(false); // Track if current input is from audio
   const [isTyping, setIsTyping] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showTranslation, setShowTranslation] = useState<string | null>(null);
@@ -116,7 +117,7 @@ const Chat: React.FC = () => {
   const speechCode = languageToSpeechCode[userLanguage] || 'en-US';
 
   // Hooks for credits, conversations, and speech
-  const { credits, useCredit, canSendMessage, hasUnlimitedCredits } = useCredits(authUserId, user?.plan);
+  const { credits, useCredit, useAudioCredit, canSendMessage, canSendAudio, hasUnlimitedCredits } = useCredits(authUserId, user?.plan);
   const { saveConversation } = useConversations(authUserId);
   const { speak, stop, isSpeaking, isSupported: isSpeechSupported } = useSpeechSynthesis({ lang: speechCode, rate: 0.9 });
 
@@ -124,6 +125,7 @@ const Chat: React.FC = () => {
     onTranscription: (text) => {
       if (text.trim()) {
         setInputValue(text);
+        setIsFromAudio(true); // Mark that this input came from audio
         toast({
           title: "Áudio transcrito",
           description: "Sua mensagem foi convertida em texto.",
@@ -200,6 +202,8 @@ const Chat: React.FC = () => {
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isTyping) return;
 
+    const wasFromAudio = isFromAudio;
+    
     // Check credits before sending
     if (!canSendMessage()) {
       toast({
@@ -213,8 +217,14 @@ const Chat: React.FC = () => {
       return;
     }
 
-    // Deduct credit
-    const creditUsed = await useCredit();
+    // Deduct appropriate credit (audio or regular)
+    let creditUsed: boolean;
+    if (wasFromAudio && !hasUnlimitedCredits) {
+      creditUsed = await useAudioCredit(); // Uses both message + audio credit
+    } else {
+      creditUsed = await useCredit();
+    }
+    
     if (!creditUsed && !hasUnlimitedCredits) {
       toast({
         title: "Erro",
@@ -233,6 +243,7 @@ const Chat: React.FC = () => {
 
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
+    setIsFromAudio(false); // Reset audio flag
     setIsTyping(true);
 
     try {
@@ -439,10 +450,15 @@ const Chat: React.FC = () => {
   };
 
   const handleMicClick = () => {
-    if (!canUseAudio) {
+    // Check if user has audio credits (for free trial users)
+    if (!canSendAudio()) {
+      const message = credits?.remaining_audio_credits === 0
+        ? "Você usou todos os seus créditos de áudio. Faça upgrade para áudios ilimitados."
+        : "Faça upgrade para usar áudio.";
       toast({
-        title: "Recurso Premium",
-        description: "Faça upgrade para usar áudio.",
+        title: "Limite de áudio atingido",
+        description: message,
+        variant: "destructive",
       });
       navigate('/plans');
       return;
@@ -534,6 +550,9 @@ const Chat: React.FC = () => {
             totalCredits={credits.total_credits}
             usedCredits={credits.used_credits}
             remainingCredits={credits.remaining_credits}
+            totalAudioCredits={credits.total_audio_credits}
+            usedAudioCredits={credits.used_audio_credits}
+            remainingAudioCredits={credits.remaining_audio_credits}
             trialEndsAt={credits.trial_ends_at}
             isExpired={credits.is_trial_expired}
             hasUnlimitedCredits={hasUnlimitedCredits}

@@ -96,30 +96,36 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          total_audio_credits: number
           total_credits: number
           trial_ends_at: string
           trial_started_at: string
           updated_at: string
+          used_audio_credits: number
           used_credits: number
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          total_audio_credits?: number
           total_credits?: number
           trial_ends_at?: string
           trial_started_at?: string
           updated_at?: string
+          used_audio_credits?: number
           used_credits?: number
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          total_audio_credits?: number
           total_credits?: number
           trial_ends_at?: string
           trial_started_at?: string
           updated_at?: string
+          used_audio_credits?: number
           used_credits?: number
           user_id?: string
         }
