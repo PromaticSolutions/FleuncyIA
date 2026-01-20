@@ -43,7 +43,7 @@ export const scenarios: Scenario[] = [
     description: 'Pergunte preços, tamanhos e compare itens',
     icon: '🛍️',
     color: 'from-pink-400 to-rose-500',
-    requiredPlan: ['free_trial', 'beginner', 'pro', 'fluency_plus'],
+    requiredPlan: ['beginner', 'pro', 'fluency_plus'],
     difficulty: 'basic',
   },
   {
