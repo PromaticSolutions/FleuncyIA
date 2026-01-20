@@ -99,9 +99,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Inicializar autenticação
   useEffect(() => {
+    let isMounted = true;
+    
     // Primeiro, configurar o listener de mudança de estado
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('[AppContext] Auth state changed:', event, session?.user?.id);
+      
+      if (!isMounted) return;
       
       if (session?.user) {
         setAuthUserId(session.user.id);
@@ -117,25 +121,37 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setConversations([]);
         setCurrentConversation(null);
       }
-      setIsLoading(false);
-    });
-
-    // Depois, verificar sessão existente
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('[AppContext] Initial session:', session?.user?.id);
-      if (session?.user) {
-        setAuthUserId(session.user.id);
-        loadUserProfile(
-          session.user.id,
-          session.user.email || '',
-          session.user.user_metadata?.name || 'Usuário'
-        );
-      } else {
+      
+      if (isMounted) {
         setIsLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Depois, verificar sessão existente
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log('[AppContext] Initial session:', session?.user?.id);
+      
+      if (!isMounted) return;
+      
+      if (session?.user) {
+        setAuthUserId(session.user.id);
+        await loadUserProfile(
+          session.user.id,
+          session.user.email || '',
+          session.user.user_metadata?.name || 'Usuário'
+        );
+      }
+      
+      // Sempre desativar loading após verificar sessão inicial
+      if (isMounted) {
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, [loadUserProfile]);
 
   const addConversation = (conversation: Conversation) => {
