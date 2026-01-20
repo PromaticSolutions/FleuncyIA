@@ -66,6 +66,9 @@ const Home: React.FC = () => {
               totalCredits={credits.total_credits}
               usedCredits={credits.used_credits}
               remainingCredits={credits.remaining_credits}
+              totalAudioCredits={credits.total_audio_credits}
+              usedAudioCredits={credits.used_audio_credits}
+              remainingAudioCredits={credits.remaining_audio_credits}
               trialEndsAt={credits.trial_ends_at}
               isExpired={credits.is_trial_expired}
               hasUnlimitedCredits={hasUnlimitedCredits}
