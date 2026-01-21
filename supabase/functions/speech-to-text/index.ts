@@ -6,34 +6,29 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Process base64 in chunks to prevent memory issues
-function processBase64Chunks(base64String: string, chunkSize = 32768) {
-  const chunks: Uint8Array[] = [];
-  let position = 0;
+// Convert Uint8Array to base64 in chunks to prevent stack overflow
+function uint8ArrayToBase64(bytes: Uint8Array): string {
+  const CHUNK_SIZE = 8192;
+  let result = '';
   
-  while (position < base64String.length) {
-    const chunk = base64String.slice(position, position + chunkSize);
-    const binaryChunk = atob(chunk);
-    const bytes = new Uint8Array(binaryChunk.length);
-    
-    for (let i = 0; i < binaryChunk.length; i++) {
-      bytes[i] = binaryChunk.charCodeAt(i);
-    }
-    
-    chunks.push(bytes);
-    position += chunkSize;
+  for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+    const chunk = bytes.subarray(i, Math.min(i + CHUNK_SIZE, bytes.length));
+    result += String.fromCharCode(...chunk);
   }
+  
+  return btoa(result);
+}
 
-  const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-  const result = new Uint8Array(totalLength);
-  let offset = 0;
-
-  for (const chunk of chunks) {
-    result.set(chunk, offset);
-    offset += chunk.length;
+// Decode base64 to Uint8Array in chunks to prevent stack overflow
+function base64ToUint8Array(base64String: string): Uint8Array {
+  const binaryString = atob(base64String);
+  const bytes = new Uint8Array(binaryString.length);
+  
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
   }
-
-  return result;
+  
+  return bytes;
 }
 
 serve(async (req) => {
@@ -54,11 +49,14 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY não configurada");
     }
 
-    // Process audio in chunks
-    const binaryAudio = processBase64Chunks(audio);
+    console.log('Processing audio, length:', audio.length);
+
+    // Decode the incoming base64 audio
+    const binaryAudio = base64ToUint8Array(audio);
+    console.log('Decoded audio size:', binaryAudio.length, 'bytes');
     
-    // Convert to base64 for Gemini
-    const base64Audio = btoa(String.fromCharCode(...binaryAudio));
+    // Re-encode for Gemini API using chunked approach
+    const base64Audio = uint8ArrayToBase64(binaryAudio);
 
     // Use Gemini for speech-to-text
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -98,6 +96,7 @@ serve(async (req) => {
 
     const result = await response.json();
     const transcribedText = result.choices?.[0]?.message?.content?.trim() || '';
+    console.log('Transcription result:', transcribedText.substring(0, 100));
 
     return new Response(
       JSON.stringify({ text: transcribedText }),

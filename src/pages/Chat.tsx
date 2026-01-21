@@ -662,27 +662,28 @@ const Chat: React.FC = () => {
       {/* Input Area */}
       <div className="bg-card border-t border-border px-3 py-3 space-y-3 sm:px-4">
         <div className="flex items-center gap-2">
-          <div className="flex-1 relative">
+          <div className="flex-1">
             <Input
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Digite sua mensagem..."
-              className="pr-12"
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               disabled={isTyping || isRecording || isTranscribing}
             />
-            <button
-              onClick={handleMicClick}
-              disabled={isTranscribing}
-              className={`absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                isRecording 
-                  ? 'bg-destructive text-white' 
-                  : 'hover:bg-muted text-muted-foreground'
-              }`}
-            >
-              {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-            </button>
           </div>
+          
+          {/* Mic button - more visible */}
+          <Button 
+            size="icon" 
+            variant={isRecording ? "destructive" : "outline"}
+            onClick={handleMicClick}
+            disabled={isTranscribing}
+            className={`shrink-0 ${isRecording ? 'animate-pulse' : 'border-primary text-primary hover:bg-primary hover:text-primary-foreground'}`}
+          >
+            {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+          </Button>
+          
+          {/* Send button */}
           <Button 
             size="icon" 
             onClick={handleSendMessage}
