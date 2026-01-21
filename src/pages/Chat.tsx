@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useApp } from '@/contexts/AppContext';
-import { scenarios } from '@/data/scenarios';
+import { scenarios, isScenarioLocked } from '@/data/scenarios';
 import { Message, Conversation, ConversationFeedback, Language } from '@/types';
 import { ArrowLeft, Send, Mic, MicOff, Languages, MoreVertical, Loader2, X, Volume2, VolumeX, Lightbulb } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -142,6 +142,19 @@ const Chat: React.FC = () => {
   });
 
   const scenario = scenarios.find(s => s.id === scenarioId);
+
+  // Enforce scenario access rules (prevents opening locked scenarios by direct URL)
+  useEffect(() => {
+    if (!scenario || !user) return;
+    if (isScenarioLocked(scenario, user.plan)) {
+      toast({
+        title: 'Cenário bloqueado',
+        description: 'Faça upgrade para acessar este cenário.',
+        variant: 'destructive',
+      });
+      navigate('/plans');
+    }
+  }, [scenario, user, toast, navigate]);
 
   useEffect(() => {
     if (scenario && messages.length === 0) {
