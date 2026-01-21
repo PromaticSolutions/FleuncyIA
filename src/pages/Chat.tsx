@@ -112,7 +112,7 @@ const Chat: React.FC = () => {
     getUser();
   }, []);
 
-  const canUseAudio = user?.plan === 'pro' || user?.plan === 'fluency_plus';
+  // Audio permission is now handled by canSendAudio() from useCredits hook
   const userLanguage = (user?.language || 'english') as Language;
   const speechCode = languageToSpeechCode[userLanguage] || 'en-US';
 
@@ -203,9 +203,11 @@ const Chat: React.FC = () => {
     if (!inputValue.trim() || isTyping) return;
 
     const wasFromAudio = isFromAudio;
+    console.log('[Chat] Sending message:', { wasFromAudio, hasUnlimitedCredits, credits });
     
     // Check credits before sending
     if (!canSendMessage()) {
+      console.log('[Chat] Cannot send message - no credits');
       toast({
         title: "Sem créditos",
         description: credits?.is_trial_expired 
@@ -220,12 +222,15 @@ const Chat: React.FC = () => {
     // Deduct appropriate credit (audio or regular)
     let creditUsed: boolean;
     if (wasFromAudio && !hasUnlimitedCredits) {
+      console.log('[Chat] Using audio credit');
       creditUsed = await useAudioCredit(); // Uses both message + audio credit
     } else {
+      console.log('[Chat] Using regular credit');
       creditUsed = await useCredit();
     }
     
     if (!creditUsed && !hasUnlimitedCredits) {
+      console.log('[Chat] Failed to use credit');
       toast({
         title: "Erro",
         description: "Não foi possível processar sua mensagem.",

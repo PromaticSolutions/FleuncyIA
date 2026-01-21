@@ -101,8 +101,17 @@ export const useCredits = (userId: string | undefined, planId: string | undefine
 
   const useCredit = useCallback(async (): Promise<boolean> => {
     if (hasUnlimitedCredits) return true;
-    if (!userId || !credits) return false;
-    if (credits.remaining_credits <= 0 || credits.is_trial_expired) return false;
+    if (!userId || !credits) {
+      console.log('Cannot use credit: no userId or credits', { userId, credits });
+      return false;
+    }
+    if (credits.remaining_credits <= 0 || credits.is_trial_expired) {
+      console.log('Cannot use credit:', {
+        remaining: credits.remaining_credits,
+        is_expired: credits.is_trial_expired
+      });
+      return false;
+    }
 
     try {
       const { error } = await supabase
@@ -118,6 +127,7 @@ export const useCredits = (userId: string | undefined, planId: string | undefine
         remaining_credits: prev.remaining_credits - 1,
       } : null);
 
+      console.log('Credit used successfully');
       return true;
     } catch (err) {
       console.error('Error using credit:', err);
@@ -128,7 +138,15 @@ export const useCredits = (userId: string | undefined, planId: string | undefine
   const useAudioCredit = useCallback(async (): Promise<boolean> => {
     if (hasUnlimitedCredits) return true;
     if (!userId || !credits) return false;
-    if (credits.remaining_audio_credits <= 0 || credits.is_trial_expired) return false;
+    // Check BOTH audio credits AND regular credits
+    if (credits.remaining_audio_credits <= 0 || credits.remaining_credits <= 0 || credits.is_trial_expired) {
+      console.log('Cannot use audio credit:', {
+        remaining_audio: credits.remaining_audio_credits,
+        remaining_regular: credits.remaining_credits,
+        is_expired: credits.is_trial_expired
+      });
+      return false;
+    }
 
     try {
       // Use both a regular credit AND an audio credit
@@ -150,6 +168,7 @@ export const useCredits = (userId: string | undefined, planId: string | undefine
         remaining_audio_credits: prev.remaining_audio_credits - 1,
       } : null);
 
+      console.log('Audio credit used successfully');
       return true;
     } catch (err) {
       console.error('Error using audio credit:', err);
