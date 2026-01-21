@@ -2,6 +2,10 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useCa
 import { User, Language, Level, WeeklyGoal, PlanType, Conversation } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 
+const VALID_PLANS: PlanType[] = ['free_trial', 'beginner', 'pro', 'fluency_plus'];
+const isValidPlanType = (value: unknown): value is PlanType =>
+  typeof value === 'string' && (VALID_PLANS as string[]).includes(value);
+
 interface AppContextType {
   user: User | null;
   setUser: (user: User | null) => void;
@@ -66,7 +70,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           language: profileData.language as Language,
           level: profileData.level as Level,
           weeklyGoal: profileData.weekly_goal as WeeklyGoal,
-          plan: profileData.plan as PlanType,
+          plan: isValidPlanType(profileData.plan) ? profileData.plan : 'free_trial',
           createdAt: new Date(profileData.created_at),
         });
         setHasCompletedOnboarding(profileData.has_completed_onboarding);
@@ -92,7 +96,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           language: retryProfile.language as Language,
           level: retryProfile.level as Level,
           weeklyGoal: retryProfile.weekly_goal as WeeklyGoal,
-          plan: retryProfile.plan as PlanType,
+          plan: isValidPlanType(retryProfile.plan) ? retryProfile.plan : 'free_trial',
           createdAt: new Date(retryProfile.created_at),
         });
         setHasCompletedOnboarding(retryProfile.has_completed_onboarding);
