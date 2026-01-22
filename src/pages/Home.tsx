@@ -2,11 +2,12 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
 import { scenarios, isScenarioLocked } from '@/data/scenarios';
-import { Lock, TrendingUp, Target, BookOpen } from 'lucide-react';
+import { Lock, TrendingUp, Target, BookOpen, Trophy, Users, ChevronRight } from 'lucide-react';
 import { Scenario } from '@/types';
 import { AppLayout } from '@/components/AppLayout';
 import { useCredits } from '@/hooks/useCredits';
 import { CreditsDisplay } from '@/components/CreditsDisplay';
+import { Button } from '@/components/ui/button';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -103,6 +104,37 @@ const Home: React.FC = () => {
             value={`${user?.weeklyGoal || 5} conversas`}
             color="bg-warning/10 text-warning"
           />
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <button
+            onClick={() => navigate('/achievements')}
+            className="flex items-center gap-4 p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-xl hover:from-amber-500/20 hover:to-orange-500/20 transition-colors"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0">
+              <Trophy className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="font-semibold text-foreground">Conquistas</p>
+              <p className="text-sm text-muted-foreground">Veja suas medalhas e desbloqueie novas</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </button>
+
+          <button
+            onClick={() => navigate('/leaderboard')}
+            className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/20 rounded-xl hover:from-blue-500/20 hover:to-indigo-500/20 transition-colors"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center flex-shrink-0">
+              <Users className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="font-semibold text-foreground">Ranking</p>
+              <p className="text-sm text-muted-foreground">Compete com amigos e grupos</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </button>
         </div>
 
         {/* Scenarios Section */}
