@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { useApp } from '@/contexts/AppContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,16 +17,11 @@ import {
   Check,
   Plus,
   Search,
-  Loader2
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface RankingUser {
   user_id: string;
@@ -38,15 +33,6 @@ interface RankingUser {
   current_adaptive_level: string;
 }
 
-interface Friend {
-  id: string;
-  user_id: string;
-  friend_id: string;
-  status: string;
-  friend_name?: string;
-  friend_avatar?: string;
-}
-
 interface EvolutionGroup {
   id: string;
   name: string;
@@ -54,117 +40,175 @@ interface EvolutionGroup {
   invite_code: string;
   created_by: string;
   max_members: number;
-  member_count?: number;
 }
 
+// Skeleton component for ranking rows
+const RankingRowSkeleton = () => (
+  <div className="flex items-center gap-4 p-4 animate-pulse">
+    <Skeleton className="w-8 h-8 rounded" />
+    <Skeleton className="w-10 h-10 rounded-full" />
+    <div className="flex-1">
+      <Skeleton className="h-4 w-24 mb-2" />
+      <Skeleton className="h-3 w-16" />
+    </div>
+    <div className="flex gap-4">
+      <Skeleton className="h-4 w-8" />
+      <Skeleton className="h-4 w-8" />
+    </div>
+  </div>
+);
+
 const Leaderboard: React.FC = () => {
-  const { authUserId, user } = useApp();
+  const { authUserId } = useApp();
   const { toast } = useToast();
+  
+  // State
   const [globalRanking, setGlobalRanking] = useState<RankingUser[]>([]);
   const [friendsRanking, setFriendsRanking] = useState<RankingUser[]>([]);
-  const [friends, setFriends] = useState<Friend[]>([]);
   const [groups, setGroups] = useState<EvolutionGroup[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  
+  // Loading states
+  const [isLoadingGlobal, setIsLoadingGlobal] = useState(true);
+  const [isLoadingFriends, setIsLoadingFriends] = useState(true);
+  const [isLoadingGroups, setIsLoadingGroups] = useState(true);
+  
+  // Form states
   const [friendEmail, setFriendEmail] = useState('');
   const [groupName, setGroupName] = useState('');
   const [groupInviteCode, setGroupInviteCode] = useState('');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [isInvitingFriend, setIsInvitingFriend] = useState(false);
+  const [isJoiningGroup, setIsJoiningGroup] = useState(false);
 
-  useEffect(() => {
-    if (authUserId) {
-      fetchData();
-    }
-  }, [authUserId]);
-
-  const fetchData = async () => {
-    setIsLoading(true);
+  // Fetch global ranking
+  const fetchGlobalRanking = useCallback(async () => {
+    if (!authUserId) return;
+    setIsLoadingGlobal(true);
     try {
-      // Fetch global ranking (top 50)
-      const { data: globalData } = await supabase
+      const { data, error } = await supabase
         .from('user_profiles')
         .select('user_id, name, avatar_url, total_conversations, current_streak, longest_streak, current_adaptive_level')
         .order('total_conversations', { ascending: false })
         .limit(50);
 
-      if (globalData) {
-        setGlobalRanking(globalData as RankingUser[]);
-      }
+      if (error) throw error;
+      setGlobalRanking((data || []) as RankingUser[]);
+    } catch (error) {
+      console.error('Error fetching global ranking:', error);
+      toast({
+        title: "Erro ao carregar ranking",
+        description: "Tente novamente em alguns instantes.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingGlobal(false);
+    }
+  }, [authUserId, toast]);
 
-      // Fetch friends
-      const { data: friendships } = await supabase
+  // Fetch friends ranking
+  const fetchFriendsRanking = useCallback(async () => {
+    if (!authUserId) return;
+    setIsLoadingFriends(true);
+    try {
+      const { data: friendships, error: friendshipsError } = await supabase
         .from('friendships')
-        .select('*')
+        .select('user_id, friend_id')
         .or(`user_id.eq.${authUserId},friend_id.eq.${authUserId}`)
         .eq('status', 'accepted');
 
-      if (friendships) {
-        setFriends(friendships as Friend[]);
-        
-        // Fetch friends profiles for ranking
+      if (friendshipsError) throw friendshipsError;
+
+      if (friendships && friendships.length > 0) {
         const friendIds = friendships.map(f => 
           f.user_id === authUserId ? f.friend_id : f.user_id
         );
         
-        if (friendIds.length > 0) {
-          const { data: friendProfiles } = await supabase
-            .from('user_profiles')
-            .select('user_id, name, avatar_url, total_conversations, current_streak, longest_streak, current_adaptive_level')
-            .in('user_id', [...friendIds, authUserId])
-            .order('total_conversations', { ascending: false });
-          
-          if (friendProfiles) {
-            setFriendsRanking(friendProfiles as RankingUser[]);
-          }
-        }
+        const { data: profiles, error: profilesError } = await supabase
+          .from('user_profiles')
+          .select('user_id, name, avatar_url, total_conversations, current_streak, longest_streak, current_adaptive_level')
+          .in('user_id', [...friendIds, authUserId])
+          .order('total_conversations', { ascending: false });
+        
+        if (profilesError) throw profilesError;
+        setFriendsRanking((profiles || []) as RankingUser[]);
+      } else {
+        // Only show current user if no friends
+        const { data: myProfile } = await supabase
+          .from('user_profiles')
+          .select('user_id, name, avatar_url, total_conversations, current_streak, longest_streak, current_adaptive_level')
+          .eq('user_id', authUserId)
+          .single();
+        
+        setFriendsRanking(myProfile ? [myProfile as RankingUser] : []);
       }
+    } catch (error) {
+      console.error('Error fetching friends ranking:', error);
+    } finally {
+      setIsLoadingFriends(false);
+    }
+  }, [authUserId]);
 
-      // Fetch groups
+  // Fetch groups
+  const fetchGroups = useCallback(async () => {
+    if (!authUserId) return;
+    setIsLoadingGroups(true);
+    try {
+      // Fetch groups user is member of
       const { data: memberGroups } = await supabase
         .from('group_members')
         .select('group_id')
         .eq('user_id', authUserId);
 
-      if (memberGroups && memberGroups.length > 0) {
-        const groupIds = memberGroups.map(m => m.group_id);
-        const { data: groupData } = await supabase
-          .from('evolution_groups')
-          .select('*')
-          .in('id', groupIds);
-        
-        if (groupData) {
-          setGroups(groupData as EvolutionGroup[]);
-        }
-      }
+      const groupIds = memberGroups?.map(m => m.group_id) || [];
 
-      // Also fetch groups created by user
+      // Fetch groups created by user
       const { data: ownedGroups } = await supabase
         .from('evolution_groups')
         .select('*')
         .eq('created_by', authUserId);
 
-      if (ownedGroups) {
-        setGroups(prev => {
-          const existingIds = new Set(prev.map(g => g.id));
-          const newGroups = ownedGroups.filter((g: EvolutionGroup) => !existingIds.has(g.id));
-          return [...prev, ...(newGroups as EvolutionGroup[])];
-        });
+      // Fetch groups user is member of
+      let memberGroupsData: EvolutionGroup[] = [];
+      if (groupIds.length > 0) {
+        const { data } = await supabase
+          .from('evolution_groups')
+          .select('*')
+          .in('id', groupIds);
+        memberGroupsData = (data || []) as EvolutionGroup[];
       }
 
+      // Combine and dedupe
+      const allGroups = [...(ownedGroups || []), ...memberGroupsData] as EvolutionGroup[];
+      const uniqueGroups = allGroups.reduce((acc, group) => {
+        if (!acc.find(g => g.id === group.id)) {
+          acc.push(group);
+        }
+        return acc;
+      }, [] as EvolutionGroup[]);
+
+      setGroups(uniqueGroups);
     } catch (error) {
-      console.error('Error fetching leaderboard data:', error);
+      console.error('Error fetching groups:', error);
     } finally {
-      setIsLoading(false);
+      setIsLoadingGroups(false);
     }
-  };
+  }, [authUserId]);
+
+  // Initial fetch
+  useEffect(() => {
+    if (authUserId) {
+      fetchGlobalRanking();
+      fetchFriendsRanking();
+      fetchGroups();
+    }
+  }, [authUserId, fetchGlobalRanking, fetchFriendsRanking, fetchGroups]);
 
   const inviteFriend = async () => {
     if (!friendEmail.trim() || !authUserId) return;
     
     setIsInvitingFriend(true);
     try {
-      // Find user by email
       const { data: friendProfile } = await supabase
         .from('user_profiles')
         .select('user_id')
@@ -189,7 +233,6 @@ const Leaderboard: React.FC = () => {
         return;
       }
 
-      // Check if friendship already exists
       const { data: existing } = await supabase
         .from('friendships')
         .select('id')
@@ -205,13 +248,12 @@ const Leaderboard: React.FC = () => {
         return;
       }
 
-      // Create friendship request
       const { error } = await supabase
         .from('friendships')
         .insert({
           user_id: authUserId,
           friend_id: friendProfile.user_id,
-          status: 'accepted', // Auto-accept for simplicity
+          status: 'accepted',
         });
 
       if (error) throw error;
@@ -222,7 +264,7 @@ const Leaderboard: React.FC = () => {
       });
       
       setFriendEmail('');
-      fetchData();
+      fetchFriendsRanking();
     } catch (error) {
       console.error('Error inviting friend:', error);
       toast({
@@ -251,7 +293,6 @@ const Leaderboard: React.FC = () => {
 
       if (error) throw error;
 
-      // Add creator as admin member
       await supabase
         .from('group_members')
         .insert({
@@ -266,7 +307,7 @@ const Leaderboard: React.FC = () => {
       });
       
       setGroupName('');
-      fetchData();
+      fetchGroups();
     } catch (error) {
       console.error('Error creating group:', error);
       toast({
@@ -282,8 +323,8 @@ const Leaderboard: React.FC = () => {
   const joinGroup = async () => {
     if (!groupInviteCode.trim() || !authUserId) return;
     
+    setIsJoiningGroup(true);
     try {
-      // Find group by invite code
       const { data: group } = await supabase
         .from('evolution_groups')
         .select('*')
@@ -299,7 +340,6 @@ const Leaderboard: React.FC = () => {
         return;
       }
 
-      // Check if already member
       const { data: existing } = await supabase
         .from('group_members')
         .select('id')
@@ -316,7 +356,6 @@ const Leaderboard: React.FC = () => {
         return;
       }
 
-      // Join group
       const { error } = await supabase
         .from('group_members')
         .insert({
@@ -332,7 +371,7 @@ const Leaderboard: React.FC = () => {
       });
       
       setGroupInviteCode('');
-      fetchData();
+      fetchGroups();
     } catch (error) {
       console.error('Error joining group:', error);
       toast({
@@ -340,6 +379,8 @@ const Leaderboard: React.FC = () => {
         description: "Não foi possível entrar no grupo.",
         variant: "destructive",
       });
+    } finally {
+      setIsJoiningGroup(false);
     }
   };
 
@@ -366,16 +407,6 @@ const Leaderboard: React.FC = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <AppLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      </AppLayout>
-    );
-  }
-
   return (
     <AppLayout>
       <div className="p-6 lg:p-8 max-w-4xl mx-auto">
@@ -390,42 +421,57 @@ const Leaderboard: React.FC = () => {
 
         <Tabs defaultValue="global" className="space-y-6">
           <TabsList className="w-full grid grid-cols-3">
-            <TabsTrigger value="global">
-              <Trophy className="w-4 h-4 mr-2" />
-              Global
+            <TabsTrigger value="global" className="gap-2">
+              <Trophy className="w-4 h-4" />
+              <span className="hidden sm:inline">Global</span>
             </TabsTrigger>
-            <TabsTrigger value="friends">
-              <Users className="w-4 h-4 mr-2" />
-              Amigos
+            <TabsTrigger value="friends" className="gap-2">
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">Amigos</span>
             </TabsTrigger>
-            <TabsTrigger value="groups">
-              <Target className="w-4 h-4 mr-2" />
-              Grupos
+            <TabsTrigger value="groups" className="gap-2">
+              <Target className="w-4 h-4" />
+              <span className="hidden sm:inline">Grupos</span>
             </TabsTrigger>
           </TabsList>
 
           {/* Global Ranking */}
           <TabsContent value="global" className="space-y-4">
             <div className="bg-card rounded-xl border border-border overflow-hidden">
-              <div className="p-4 border-b border-border bg-muted/50">
+              <div className="p-4 border-b border-border bg-muted/50 flex items-center justify-between">
                 <h3 className="font-semibold flex items-center gap-2">
                   <Trophy className="w-5 h-5 text-primary" />
                   Ranking Global - Top 50
                 </h3>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={fetchGlobalRanking}
+                  disabled={isLoadingGlobal}
+                >
+                  <RefreshCw className={`w-4 h-4 ${isLoadingGlobal ? 'animate-spin' : ''}`} />
+                </Button>
               </div>
               <div className="divide-y divide-border">
-                {globalRanking.map((player, index) => (
-                  <RankingRow 
-                    key={player.user_id} 
-                    player={player} 
-                    position={index + 1}
-                    isCurrentUser={player.user_id === authUserId}
-                    getRankIcon={getRankIcon}
-                  />
-                ))}
-                {globalRanking.length === 0 && (
+                {isLoadingGlobal ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <RankingRowSkeleton key={i} />
+                  ))
+                ) : globalRanking.length > 0 ? (
+                  globalRanking.map((player, index) => (
+                    <RankingRow 
+                      key={player.user_id} 
+                      player={player} 
+                      position={index + 1}
+                      isCurrentUser={player.user_id === authUserId}
+                      getRankIcon={getRankIcon}
+                    />
+                  ))
+                ) : (
                   <div className="p-8 text-center text-muted-foreground">
-                    Nenhum usuário no ranking ainda.
+                    <Trophy className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p>Nenhum usuário no ranking ainda.</p>
+                    <p className="text-sm mt-1">Seja o primeiro a praticar!</p>
                   </div>
                 )}
               </div>
@@ -447,10 +493,11 @@ const Leaderboard: React.FC = () => {
                     placeholder="Email do amigo"
                     value={friendEmail}
                     onChange={(e) => setFriendEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && inviteFriend()}
                     className="pl-9"
                   />
                 </div>
-                <Button onClick={inviteFriend} disabled={isInvitingFriend}>
+                <Button onClick={inviteFriend} disabled={isInvitingFriend || !friendEmail.trim()}>
                   {isInvitingFriend ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
@@ -462,26 +509,40 @@ const Leaderboard: React.FC = () => {
 
             {/* Friends Leaderboard */}
             <div className="bg-card rounded-xl border border-border overflow-hidden">
-              <div className="p-4 border-b border-border bg-muted/50">
+              <div className="p-4 border-b border-border bg-muted/50 flex items-center justify-between">
                 <h3 className="font-semibold flex items-center gap-2">
                   <Users className="w-5 h-5 text-primary" />
                   Ranking entre Amigos
                 </h3>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={fetchFriendsRanking}
+                  disabled={isLoadingFriends}
+                >
+                  <RefreshCw className={`w-4 h-4 ${isLoadingFriends ? 'animate-spin' : ''}`} />
+                </Button>
               </div>
               <div className="divide-y divide-border">
-                {friendsRanking.map((player, index) => (
-                  <RankingRow 
-                    key={player.user_id} 
-                    player={player} 
-                    position={index + 1}
-                    isCurrentUser={player.user_id === authUserId}
-                    getRankIcon={getRankIcon}
-                  />
-                ))}
-                {friendsRanking.length === 0 && (
+                {isLoadingFriends ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <RankingRowSkeleton key={i} />
+                  ))
+                ) : friendsRanking.length > 1 ? (
+                  friendsRanking.map((player, index) => (
+                    <RankingRow 
+                      key={player.user_id} 
+                      player={player} 
+                      position={index + 1}
+                      isCurrentUser={player.user_id === authUserId}
+                      getRankIcon={getRankIcon}
+                    />
+                  ))
+                ) : (
                   <div className="p-8 text-center text-muted-foreground">
                     <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                    <p>Adicione amigos para competir!</p>
+                    <p className="font-medium">Adicione amigos para competir!</p>
+                    <p className="text-sm mt-1">Use o email deles para conectar.</p>
                   </div>
                 )}
               </div>
@@ -503,8 +564,9 @@ const Leaderboard: React.FC = () => {
                     placeholder="Nome do grupo"
                     value={groupName}
                     onChange={(e) => setGroupName(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && createGroup()}
                   />
-                  <Button onClick={createGroup} disabled={isCreatingGroup}>
+                  <Button onClick={createGroup} disabled={isCreatingGroup || !groupName.trim()}>
                     {isCreatingGroup ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
@@ -525,29 +587,55 @@ const Leaderboard: React.FC = () => {
                     placeholder="Código de convite"
                     value={groupInviteCode}
                     onChange={(e) => setGroupInviteCode(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && joinGroup()}
                   />
-                  <Button onClick={joinGroup}>Entrar</Button>
+                  <Button onClick={joinGroup} disabled={isJoiningGroup || !groupInviteCode.trim()}>
+                    {isJoiningGroup ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      'Entrar'
+                    )}
+                  </Button>
                 </div>
               </div>
             </div>
 
             {/* My Groups */}
             <div className="space-y-4">
-              <h3 className="font-semibold flex items-center gap-2">
-                <Target className="w-5 h-5 text-primary" />
-                Meus Grupos de Evolução
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Target className="w-5 h-5 text-primary" />
+                  Meus Grupos de Evolução
+                </h3>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={fetchGroups}
+                  disabled={isLoadingGroups}
+                >
+                  <RefreshCw className={`w-4 h-4 ${isLoadingGroups ? 'animate-spin' : ''}`} />
+                </Button>
+              </div>
               
-              {groups.length === 0 ? (
+              {isLoadingGroups ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Array.from({ length: 2 }).map((_, i) => (
+                    <div key={i} className="bg-card rounded-xl border border-border p-4 animate-pulse">
+                      <Skeleton className="h-5 w-32 mb-2" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                  ))}
+                </div>
+              ) : groups.length === 0 ? (
                 <div className="bg-card rounded-xl border border-border p-8 text-center text-muted-foreground">
                   <Target className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>Você ainda não faz parte de nenhum grupo.</p>
+                  <p className="font-medium">Você ainda não faz parte de nenhum grupo.</p>
                   <p className="text-sm mt-1">Crie um ou peça um código de convite!</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {groups.map((group) => (
-                    <div key={group.id} className="bg-card rounded-xl border border-border p-4">
+                    <div key={group.id} className="bg-card rounded-xl border border-border p-4 hover:border-primary/50 transition-colors">
                       <div className="flex items-start justify-between mb-3">
                         <div>
                           <h4 className="font-semibold text-foreground">{group.name}</h4>
@@ -561,13 +649,14 @@ const Leaderboard: React.FC = () => {
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <code className="text-sm bg-muted px-2 py-1 rounded">
+                        <code className="text-sm bg-muted px-2 py-1 rounded font-mono">
                           {group.invite_code}
                         </code>
                         <Button
                           size="sm"
                           variant="ghost"
                           onClick={() => copyInviteCode(group.invite_code)}
+                          className="h-8 w-8 p-0"
                         >
                           {copiedCode === group.invite_code ? (
                             <Check className="w-4 h-4 text-green-500" />
@@ -594,12 +683,12 @@ const RankingRow: React.FC<{
   isCurrentUser: boolean;
   getRankIcon: (position: number) => React.ReactNode;
 }> = ({ player, position, isCurrentUser, getRankIcon }) => (
-  <div className={`flex items-center gap-4 p-4 ${isCurrentUser ? 'bg-primary/5' : 'hover:bg-muted/50'} transition-colors`}>
+  <div className={`flex items-center gap-4 p-4 ${isCurrentUser ? 'bg-primary/5 border-l-2 border-l-primary' : 'hover:bg-muted/50'} transition-colors`}>
     <div className="w-8 flex justify-center">
       {getRankIcon(position)}
     </div>
     
-    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-lg">
+    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-lg overflow-hidden">
       {player.avatar_url ? (
         <img src={player.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
       ) : (
@@ -610,7 +699,7 @@ const RankingRow: React.FC<{
     <div className="flex-1 min-w-0">
       <p className={`font-medium truncate ${isCurrentUser ? 'text-primary' : 'text-foreground'}`}>
         {player.name}
-        {isCurrentUser && <span className="text-xs ml-2">(você)</span>}
+        {isCurrentUser && <span className="text-xs ml-2 opacity-75">(você)</span>}
       </p>
       <p className="text-sm text-muted-foreground">
         Nível {player.current_adaptive_level || 'A1'}
@@ -618,13 +707,13 @@ const RankingRow: React.FC<{
     </div>
     
     <div className="flex items-center gap-4 text-sm">
-      <div className="flex items-center gap-1 text-muted-foreground">
+      <div className="flex items-center gap-1 text-muted-foreground" title="Conversas">
         <MessageSquare className="w-4 h-4" />
         <span>{player.total_conversations}</span>
       </div>
-      <div className="flex items-center gap-1 text-orange-500">
+      <div className="flex items-center gap-1 text-orange-500" title="Sequência atual">
         <Flame className="w-4 h-4" />
-        <span>{player.current_streak}</span>
+        <span>{player.current_streak || 0}</span>
       </div>
     </div>
   </div>

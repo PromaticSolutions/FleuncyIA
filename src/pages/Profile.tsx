@@ -10,16 +10,20 @@ import {
   Save,
   X,
   Mail,
-  Flame
+  Flame,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AppLayout } from '@/components/AppLayout';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Profile: React.FC = () => {
-  const { user, conversations, authUserId, updateUserProfile } = useApp();
+  const { user, conversations, authUserId, updateUserProfile, isLoading: isAppLoading } = useApp();
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [editedName, setEditedName] = useState(user?.name || '');
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [profileStats, setProfileStats] = useState<{
     currentStreak: number;
     longestStreak: number;
@@ -28,22 +32,33 @@ const Profile: React.FC = () => {
   }>({ currentStreak: 0, longestStreak: 0, totalConversations: 0, currentLevel: 'A1' });
 
   useEffect(() => {
+    if (user?.name) {
+      setEditedName(user.name);
+    }
+  }, [user?.name]);
+
+  useEffect(() => {
     const fetchStats = async () => {
       if (!authUserId) return;
+      setIsLoadingStats(true);
       
-      const { data } = await supabase
-        .from('user_profiles')
-        .select('current_streak, longest_streak, total_conversations, current_adaptive_level')
-        .eq('user_id', authUserId)
-        .maybeSingle();
+      try {
+        const { data } = await supabase
+          .from('user_profiles')
+          .select('current_streak, longest_streak, total_conversations, current_adaptive_level')
+          .eq('user_id', authUserId)
+          .maybeSingle();
 
-      if (data) {
-        setProfileStats({
-          currentStreak: data.current_streak || 0,
-          longestStreak: data.longest_streak || 0,
-          totalConversations: data.total_conversations || 0,
-          currentLevel: data.current_adaptive_level || 'A1',
-        });
+        if (data) {
+          setProfileStats({
+            currentStreak: data.current_streak || 0,
+            longestStreak: data.longest_streak || 0,
+            totalConversations: data.total_conversations || 0,
+            currentLevel: data.current_adaptive_level || 'A1',
+          });
+        }
+      } finally {
+        setIsLoadingStats(false);
       }
     };
     fetchStats();
@@ -70,12 +85,41 @@ const Profile: React.FC = () => {
     return acc;
   }, 0);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (editedName.trim() && editedName !== user?.name) {
-      updateUserProfile({ name: editedName.trim() });
+      setIsSaving(true);
+      try {
+        await updateUserProfile({ name: editedName.trim() });
+      } finally {
+        setIsSaving(false);
+      }
     }
     setIsEditing(false);
   };
+
+  if (isAppLoading) {
+    return (
+      <AppLayout>
+        <div className="p-6 lg:p-8 max-w-3xl mx-auto">
+          <div className="mb-8">
+            <Skeleton className="h-8 w-32 mb-2" />
+            <Skeleton className="h-4 w-48" />
+          </div>
+          <div className="space-y-6">
+            <div className="bg-card rounded-xl border border-border p-6">
+              <div className="flex items-center gap-4 mb-6">
+                <Skeleton className="w-20 h-20 rounded-full" />
+                <div>
+                  <Skeleton className="h-6 w-32 mb-2" />
+                  <Skeleton className="h-4 w-48" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
@@ -109,11 +153,15 @@ const Profile: React.FC = () => {
               
               {isEditing ? (
                 <div className="flex gap-2">
-                  <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)}>
+                  <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)} disabled={isSaving}>
                     <X className="w-4 h-4" />
                   </Button>
-                  <Button size="sm" onClick={handleSave}>
-                    <Save className="w-4 h-4 mr-1" />
+                  <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                    {isSaving ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4 mr-1" />
+                    )}
                     Salvar
                   </Button>
                 </div>
@@ -153,29 +201,41 @@ const Profile: React.FC = () => {
           <div className="bg-card rounded-xl border border-border p-6">
             <h3 className="font-semibold text-foreground mb-4">Estatísticas</h3>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <StatItem 
-                icon={<MessageSquare className="w-5 h-5" />}
-                value={profileStats.totalConversations.toString()}
-                label="Conversas"
-              />
-              <StatItem 
-                icon={<Clock className="w-5 h-5" />}
-                value={`${totalMinutes} min`}
-                label="Tempo total"
-              />
-              <StatItem 
-                icon={<Flame className="w-5 h-5" />}
-                value={profileStats.currentStreak.toString()}
-                label="Sequência atual"
-                highlight={profileStats.currentStreak >= 3}
-              />
-              <StatItem 
-                icon={<Target className="w-5 h-5" />}
-                value={profileStats.currentLevel}
-                label="Nível estimado"
-              />
-            </div>
+            {isLoadingStats ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="text-center p-4 rounded-lg bg-muted/50">
+                    <Skeleton className="w-10 h-10 rounded-lg mx-auto mb-2" />
+                    <Skeleton className="h-8 w-16 mx-auto mb-1" />
+                    <Skeleton className="h-4 w-20 mx-auto" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <StatItem 
+                  icon={<MessageSquare className="w-5 h-5" />}
+                  value={profileStats.totalConversations.toString()}
+                  label="Conversas"
+                />
+                <StatItem 
+                  icon={<Clock className="w-5 h-5" />}
+                  value={`${totalMinutes} min`}
+                  label="Tempo total"
+                />
+                <StatItem 
+                  icon={<Flame className="w-5 h-5" />}
+                  value={profileStats.currentStreak.toString()}
+                  label="Sequência atual"
+                  highlight={profileStats.currentStreak >= 3}
+                />
+                <StatItem 
+                  icon={<Target className="w-5 h-5" />}
+                  value={profileStats.currentLevel}
+                  label="Nível estimado"
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
