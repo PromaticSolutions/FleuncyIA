@@ -2,8 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AppProvider } from "@/contexts/AppContext";
+import { HelpButton } from "@/components/HelpButton";
 
 // Pages
 import Index from "./pages/Index";
@@ -24,6 +25,37 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Pages where HelpButton should NOT appear (public/unauthenticated pages)
+const noHelpButtonRoutes = ['/', '/landing', '/splash', '/welcome', '/auth'];
+
+function AppRoutes() {
+  const location = useLocation();
+  const showHelpButton = !noHelpButtonRoutes.includes(location.pathname);
+
+  return (
+    <>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/landing" element={<Landing />} />
+        <Route path="/splash" element={<Splash />} />
+        <Route path="/welcome" element={<Welcome />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/plans" element={<Plans />} />
+        <Route path="/chat/:scenarioId" element={<Chat />} />
+        <Route path="/feedback" element={<Feedback />} />
+        <Route path="/history" element={<History />} />
+        <Route path="/analytics" element={<Analytics />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      {showHelpButton && <HelpButton />}
+    </>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AppProvider>
@@ -31,23 +63,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/landing" element={<Landing />} />
-            <Route path="/splash" element={<Splash />} />
-            <Route path="/welcome" element={<Welcome />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/plans" element={<Plans />} />
-            <Route path="/chat/:scenarioId" element={<Chat />} />
-            <Route path="/feedback" element={<Feedback />} />
-            <Route path="/history" element={<History />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AppRoutes />
         </BrowserRouter>
       </TooltipProvider>
     </AppProvider>

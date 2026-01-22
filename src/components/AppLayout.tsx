@@ -1,7 +1,6 @@
 import React from 'react';
 import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
-import { HelpButton } from './HelpButton';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -20,7 +19,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             {children}
           </main>
         </SidebarInset>
-        <HelpButton />
+        {/* HelpButton is now global in App.tsx */}
       </div>
     </SidebarProvider>
   );

@@ -13,7 +13,6 @@ import { useCredits } from '@/hooks/useCredits';
 import { useConversations } from '@/hooks/useConversations';
 import { useElevenLabsTTS } from '@/hooks/useElevenLabsTTS';
 import { CreditsDisplay } from '@/components/CreditsDisplay';
-import { HelpButton } from '@/components/HelpButton';
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
@@ -737,9 +736,7 @@ const Chat: React.FC = () => {
           )}
         </Button>
       </div>
-
-      {/* Help Button - now visible in chat */}
-      <HelpButton />
+      {/* HelpButton is now global in App.tsx */}
     </div>
   );
 };
