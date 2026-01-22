@@ -23,10 +23,14 @@ import {
   LogOut,
   Crown,
   ChevronRight,
+  Trophy,
+  Users,
 } from 'lucide-react';
 
 const menuItems = [
   { title: 'Dashboard', icon: LayoutDashboard, path: '/home' },
+  { title: 'Conquistas', icon: Trophy, path: '/achievements' },
+  { title: 'Ranking', icon: Users, path: '/leaderboard' },
   { title: 'Histórico', icon: History, path: '/history' },
   { title: 'Análises', icon: BarChart3, path: '/analytics' },
   { title: 'Perfil', icon: User, path: '/profile' },
