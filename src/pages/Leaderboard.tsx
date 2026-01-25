@@ -330,11 +330,16 @@ const Leaderboard: React.FC = () => {
     
     setIsJoiningGroup(true);
     try {
-      const { data: group } = await supabase
-        .from('evolution_groups')
-        .select('*')
-        .eq('invite_code', groupInviteCode.trim().toLowerCase())
-        .maybeSingle();
+      // Use security definer function to find group by invite code (bypasses RLS)
+      const { data: groups, error: lookupError } = await supabase
+        .rpc('get_group_by_invite_code', { _invite_code: groupInviteCode.trim() });
+
+      if (lookupError) {
+        console.error('Error looking up group:', lookupError);
+        throw lookupError;
+      }
+
+      const group = groups?.[0];
 
       if (!group) {
         toast({
