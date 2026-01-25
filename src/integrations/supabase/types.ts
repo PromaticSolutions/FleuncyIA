@@ -378,6 +378,7 @@ export type Database = {
     }
     Functions: {
       get_user_group_ids: { Args: { _user_id: string }; Returns: string[] }
+      get_user_id_by_email: { Args: { _email: string }; Returns: string }
       is_group_creator: {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean

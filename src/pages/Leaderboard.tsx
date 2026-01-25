@@ -211,13 +211,16 @@ const Leaderboard: React.FC = () => {
     
     setIsInvitingFriend(true);
     try {
-      const { data: friendProfile } = await supabase
-        .from('user_profiles')
-        .select('user_id')
-        .eq('email', friendEmail.trim())
-        .maybeSingle();
+      // Use security definer function to find user by email (bypasses RLS)
+      const { data: friendUserId, error: lookupError } = await supabase
+        .rpc('get_user_id_by_email', { _email: friendEmail.trim() });
 
-      if (!friendProfile) {
+      if (lookupError) {
+        console.error('Error looking up user:', lookupError);
+        throw lookupError;
+      }
+
+      if (!friendUserId) {
         toast({
           title: "Usuário não encontrado",
           description: "Não encontramos um usuário com este email.",
@@ -226,7 +229,7 @@ const Leaderboard: React.FC = () => {
         return;
       }
 
-      if (friendProfile.user_id === authUserId) {
+      if (friendUserId === authUserId) {
         toast({
           title: "Ops!",
           description: "Você não pode adicionar a si mesmo.",
@@ -238,7 +241,7 @@ const Leaderboard: React.FC = () => {
       const { data: existing } = await supabase
         .from('friendships')
         .select('id')
-        .or(`and(user_id.eq.${authUserId},friend_id.eq.${friendProfile.user_id}),and(user_id.eq.${friendProfile.user_id},friend_id.eq.${authUserId})`)
+        .or(`and(user_id.eq.${authUserId},friend_id.eq.${friendUserId}),and(user_id.eq.${friendUserId},friend_id.eq.${authUserId})`)
         .maybeSingle();
 
       if (existing) {
@@ -254,7 +257,7 @@ const Leaderboard: React.FC = () => {
         .from('friendships')
         .insert({
           user_id: authUserId,
-          friend_id: friendProfile.user_id,
+          friend_id: friendUserId,
           status: 'accepted',
         });
 
