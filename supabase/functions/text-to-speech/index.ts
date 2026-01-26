@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { TTSRequestSchema, validateRequest } from "../_shared/validation.ts";
+import { checkAndDeductCredits } from "../_shared/credits.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -69,14 +71,22 @@ serve(async (req) => {
     }
     const { userId } = authResult;
 
-    const { text, language = 'english' } = await req.json();
-    
-    if (!text) {
-      return new Response(
-        JSON.stringify({ error: 'Text parameter is required' }), 
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // Validate request body
+    const validation = await validateRequest(req, TTSRequestSchema, corsHeaders);
+    if ('error' in validation) {
+      logStep('Validation failed');
+      return validation.error;
     }
+
+    const { text, language } = validation.data;
+    logStep("Request validated", { userId, textLength: text.length, language });
+
+    // Server-side credit check and deduction (audio request = true)
+    const creditResult = await checkAndDeductCredits(userId, true, corsHeaders);
+    if ('error' in creditResult) {
+      return creditResult.error;
+    }
+    logStep("Credits validated", { isPaidPlan: creditResult.result.isPaidPlan, remainingAudio: creditResult.result.remainingAudioCredits });
 
     const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
     
@@ -84,9 +94,12 @@ serve(async (req) => {
       throw new Error("ELEVENLABS_API_KEY não configurada");
     }
 
-    logStep('Generating speech with ElevenLabs', { userId, textLength: text.length, language });
+    // Ensure language has a default
+    const effectiveLanguage = language || 'english';
+    
+    logStep('Generating speech with ElevenLabs', { userId, textLength: text.length, language: effectiveLanguage });
 
-    const voiceId = getVoiceForLanguage(language);
+    const voiceId = getVoiceForLanguage(effectiveLanguage);
     logStep('Voice selected', { voiceId });
 
     // Call ElevenLabs TTS API directly

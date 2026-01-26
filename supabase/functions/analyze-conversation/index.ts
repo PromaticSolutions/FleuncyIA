@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { AnalyzeRequestSchema, validateRequest } from "../_shared/validation.ts";
+import { checkAndDeductCredits } from "../_shared/credits.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -65,8 +67,22 @@ serve(async (req) => {
     }
     const { userId } = authResult;
 
-    const { messages, scenarioId, userLevel, userLanguage } = await req.json();
-    logStep("Request received", { userId, scenarioId, userLevel, userLanguage, messageCount: messages?.length });
+    // Validate request body
+    const validation = await validateRequest(req, AnalyzeRequestSchema, corsHeaders);
+    if ('error' in validation) {
+      logStep('Validation failed');
+      return validation.error;
+    }
+
+    const { messages, scenarioId, userLevel, userLanguage } = validation.data;
+    logStep("Request validated", { userId, scenarioId, userLevel, userLanguage, messageCount: messages?.length });
+
+    // Server-side credit check and deduction
+    const creditResult = await checkAndDeductCredits(userId, false, corsHeaders);
+    if ('error' in creditResult) {
+      return creditResult.error;
+    }
+    logStep("Credits validated", { isPaidPlan: creditResult.result.isPaidPlan, remaining: creditResult.result.remainingCredits });
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -76,13 +92,13 @@ serve(async (req) => {
     const language = userLanguage || 'english';
     const langInfo = languageNames[language] || languageNames.english;
 
-    const userMessages = messages.filter((m: { role: string }) => m.role === 'user').map((m: { content: string }) => m.content);
-    const conversationText = messages.map((m: { role: string; content: string }) => `${m.role === 'user' ? 'Student' : 'AI'}: ${m.content}`).join('\n');
+    const userMessages = messages.filter((m) => m.role === 'user').map((m) => m.content);
+    const conversationText = messages.map((m) => `${m.role === 'user' ? 'Student' : 'AI'}: ${m.content}`).join('\n');
 
     const systemPrompt = `Você é um professor de ${langInfo.nativeName} especializado em análise de conversação. Analise a conversa do aluno praticando ${langInfo.nativeName} e forneça feedback detalhado e construtivo.
 
 O cenário da conversa é: ${scenarioId}
-Nível declarado do aluno: ${userLevel}
+Nível declarado do aluno: ${userLevel || 'intermediate'}
 Idioma praticado: ${langInfo.name} (${langInfo.nativeName})
 
 Analise APENAS as mensagens do estudante (não do AI) e forneça uma avaliação honesta mas encorajadora. Lembre-se que o aluno está praticando ${langInfo.nativeName}, então analise os erros nesse idioma.`;

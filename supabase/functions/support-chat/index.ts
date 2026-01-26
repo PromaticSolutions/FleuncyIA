@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { SupportChatRequestSchema, validateRequest } from "../_shared/validation.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -57,14 +58,25 @@ serve(async (req) => {
     }
     const { userId } = authResult;
 
-    const { messages, userName, ticketId } = await req.json();
-    logStep('Request received', { userId, ticketId, messageCount: messages?.length });
+    // Validate request body
+    const validation = await validateRequest(req, SupportChatRequestSchema, corsHeaders);
+    if ('error' in validation) {
+      logStep('Validation failed');
+      return validation.error;
+    }
+
+    const { messages, userName, ticketId } = validation.data;
+    logStep('Request validated', { userId, ticketId, messageCount: messages?.length });
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
+
+    // Sanitize userName for use in system prompt (prevent prompt injection)
+    const sanitizedUserName = (userName || 'Usuário').replace(/[<>{}[\]]/g, '').substring(0, 50);
+    const sanitizedTicketId = ticketId || 'N/A';
 
     const systemPrompt = `Você é um assistente de suporte da Fluency IA, um aplicativo de aprendizado de idiomas.
 
@@ -81,8 +93,8 @@ Comportamento:
 - Se não conseguir resolver, sugira escalonamento para atendimento humano
 - Sempre pergunte se o problema foi resolvido
 
-Nome do usuário: ${userName || 'Usuário'}
-ID do Ticket: ${ticketId || 'N/A'}
+Nome do usuário: ${sanitizedUserName}
+ID do Ticket: ${sanitizedTicketId}
 
 Categorias disponíveis:
 - duvida: Dúvidas sobre uso do app

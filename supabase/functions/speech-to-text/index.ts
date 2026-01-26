@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { STTRequestSchema, validateRequest } from "../_shared/validation.ts";
+import { checkAndDeductCredits } from "../_shared/credits.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -31,10 +33,6 @@ function getLanguageCode(language: string): string {
     'french': 'fra',
     'german': 'deu',
     'italian': 'ita',
-    'portuguese': 'por',
-    'japanese': 'jpn',
-    'korean': 'kor',
-    'chinese': 'cmn',
   };
   return languageMap[language?.toLowerCase()] || 'eng';
 }
@@ -85,11 +83,22 @@ serve(async (req) => {
     }
     const { userId } = authResult;
 
-    const { audio, mimeType = 'audio/webm', language = 'english' } = await req.json();
-    
-    if (!audio) {
-      throw new Error('Nenhum áudio fornecido');
+    // Validate request body
+    const validation = await validateRequest(req, STTRequestSchema, corsHeaders);
+    if ('error' in validation) {
+      logStep('Validation failed');
+      return validation.error;
     }
+
+    const { audio, mimeType, language } = validation.data;
+    logStep("Request validated", { userId, audioLength: audio.length, mimeType, language });
+
+    // Server-side credit check and deduction (audio request = true)
+    const creditResult = await checkAndDeductCredits(userId, true, corsHeaders);
+    if ('error' in creditResult) {
+      return creditResult.error;
+    }
+    logStep("Credits validated", { isPaidPlan: creditResult.result.isPaidPlan, remainingAudio: creditResult.result.remainingAudioCredits });
 
     const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
     
@@ -103,19 +112,23 @@ serve(async (req) => {
     const binaryAudio = base64ToUint8Array(audio);
     logStep('Decoded audio', { sizeBytes: binaryAudio.length });
 
+    // Ensure mimeType and language have defaults
+    const effectiveMimeType = mimeType || 'audio/webm';
+    const effectiveLanguage = language || 'english';
+
     // Create blob for FormData - cast to ArrayBuffer to fix Deno type issue
-    const audioBlob = new Blob([binaryAudio.buffer as ArrayBuffer], { type: mimeType });
+    const audioBlob = new Blob([binaryAudio.buffer as ArrayBuffer], { type: effectiveMimeType });
     
     // Determine file extension from mimeType
-    const extension = mimeType.includes('webm') ? 'webm' : 'wav';
+    const extension = effectiveMimeType.includes('webm') ? 'webm' : effectiveMimeType.includes('wav') ? 'wav' : 'mp3';
     
     // Prepare FormData for ElevenLabs API
     const formData = new FormData();
     formData.append("file", audioBlob, `audio.${extension}`);
     formData.append("model_id", "scribe_v2");
-    formData.append("language_code", getLanguageCode(language));
+    formData.append("language_code", getLanguageCode(effectiveLanguage));
 
-    logStep('Sending to ElevenLabs', { languageCode: getLanguageCode(language) });
+    logStep('Sending to ElevenLabs', { languageCode: getLanguageCode(effectiveLanguage) });
 
     // Call ElevenLabs Speech-to-Text API
     const response = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
@@ -129,7 +142,7 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       logStep("ElevenLabs error", { status: response.status, error: errorText });
-      throw new Error(`Erro na transcrição: ${response.status} - ${errorText}`);
+      throw new Error(`Erro na transcrição: ${response.status}`);
     }
 
     const result = await response.json();
