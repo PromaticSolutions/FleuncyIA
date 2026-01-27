@@ -269,7 +269,10 @@ const Leaderboard: React.FC = () => {
       });
       
       setFriendEmail('');
-      fetchFriendsRanking();
+      
+      // Wait a moment for DB to sync, then refresh the list
+      setIsInvitingFriend(false);
+      await fetchFriendsRanking();
     } catch (error) {
       console.error('Error inviting friend:', error);
       toast({
@@ -277,7 +280,6 @@ const Leaderboard: React.FC = () => {
         description: "Não foi possível adicionar o amigo.",
         variant: "destructive",
       });
-    } finally {
       setIsInvitingFriend(false);
     }
   };
