@@ -42,18 +42,18 @@ interface EvolutionGroup {
   max_members: number;
 }
 
-// Skeleton component for ranking rows
+// Skeleton component for ranking rows - mobile responsive
 const RankingRowSkeleton = () => (
-  <div className="flex items-center gap-4 p-4 animate-pulse">
-    <Skeleton className="w-8 h-8 rounded" />
-    <Skeleton className="w-10 h-10 rounded-full" />
-    <div className="flex-1">
-      <Skeleton className="h-4 w-24 mb-2" />
-      <Skeleton className="h-3 w-16" />
+  <div className="flex items-center gap-2 sm:gap-4 p-3 sm:p-4 animate-pulse">
+    <Skeleton className="w-6 h-6 sm:w-8 sm:h-8 rounded flex-shrink-0" />
+    <Skeleton className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex-shrink-0" />
+    <div className="flex-1 min-w-0">
+      <Skeleton className="h-4 w-20 sm:w-24 mb-2" />
+      <Skeleton className="h-3 w-12 sm:w-16" />
     </div>
-    <div className="flex gap-4">
-      <Skeleton className="h-4 w-8" />
-      <Skeleton className="h-4 w-8" />
+    <div className="flex gap-2 sm:gap-4 flex-shrink-0">
+      <Skeleton className="h-4 w-6 sm:w-8" />
+      <Skeleton className="h-4 w-6 sm:w-8" />
     </div>
   </div>
 );
@@ -419,45 +419,48 @@ const Leaderboard: React.FC = () => {
 
   return (
     <AppLayout>
-      <div className="p-6 lg:p-8 max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-1 sm:mb-2">
             Ranking e Competição
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Desafie seus amigos e veja quem evolui mais rápido
           </p>
         </div>
 
-        <Tabs defaultValue="global" className="space-y-6">
-          <TabsList className="w-full grid grid-cols-3">
-            <TabsTrigger value="global" className="gap-2">
-              <Trophy className="w-4 h-4" />
-              <span className="hidden sm:inline">Global</span>
+        <Tabs defaultValue="global" className="space-y-4 sm:space-y-6">
+          <TabsList className="w-full grid grid-cols-3 h-auto">
+            <TabsTrigger value="global" className="gap-1.5 sm:gap-2 py-2 sm:py-2.5 text-xs sm:text-sm">
+              <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline sm:inline">Global</span>
             </TabsTrigger>
-            <TabsTrigger value="friends" className="gap-2">
-              <Users className="w-4 h-4" />
-              <span className="hidden sm:inline">Amigos</span>
+            <TabsTrigger value="friends" className="gap-1.5 sm:gap-2 py-2 sm:py-2.5 text-xs sm:text-sm">
+              <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline sm:inline">Amigos</span>
             </TabsTrigger>
-            <TabsTrigger value="groups" className="gap-2">
-              <Target className="w-4 h-4" />
-              <span className="hidden sm:inline">Grupos</span>
+            <TabsTrigger value="groups" className="gap-1.5 sm:gap-2 py-2 sm:py-2.5 text-xs sm:text-sm">
+              <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline sm:inline">Grupos</span>
             </TabsTrigger>
           </TabsList>
 
           {/* Global Ranking */}
           <TabsContent value="global" className="space-y-4">
             <div className="bg-card rounded-xl border border-border overflow-hidden">
-              <div className="p-4 border-b border-border bg-muted/50 flex items-center justify-between">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-primary" />
-                  Ranking Global - Top 50
+              <div className="p-3 sm:p-4 border-b border-border bg-muted/50 flex items-center justify-between">
+                <h3 className="font-semibold flex items-center gap-2 text-sm sm:text-base">
+                  <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                  <span className="hidden xs:inline">Ranking Global</span>
+                  <span className="xs:hidden">Global</span>
+                  <span className="hidden sm:inline"> - Top 50</span>
                 </h3>
                 <Button 
                   size="sm" 
                   variant="ghost" 
                   onClick={fetchGlobalRanking}
                   disabled={isLoadingGlobal}
+                  className="h-8 w-8 p-0"
                 >
                   <RefreshCw className={`w-4 h-4 ${isLoadingGlobal ? 'animate-spin' : ''}`} />
                 </Button>
@@ -478,10 +481,10 @@ const Leaderboard: React.FC = () => {
                     />
                   ))
                 ) : (
-                  <div className="p-8 text-center text-muted-foreground">
-                    <Trophy className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                    <p>Nenhum usuário no ranking ainda.</p>
-                    <p className="text-sm mt-1">Seja o primeiro a praticar!</p>
+                  <div className="p-6 sm:p-8 text-center text-muted-foreground">
+                    <Trophy className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 opacity-50" />
+                    <p className="text-sm sm:text-base">Nenhum usuário no ranking ainda.</p>
+                    <p className="text-xs sm:text-sm mt-1">Seja o primeiro a praticar!</p>
                   </div>
                 )}
               </div>
@@ -491,9 +494,9 @@ const Leaderboard: React.FC = () => {
           {/* Friends Ranking */}
           <TabsContent value="friends" className="space-y-4">
             {/* Add Friend */}
-            <div className="bg-card rounded-xl border border-border p-4">
-              <h3 className="font-semibold mb-4 flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-primary" />
+            <div className="bg-card rounded-xl border border-border p-3 sm:p-4">
+              <h3 className="font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+                <UserPlus className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                 Adicionar Amigo
               </h3>
               <div className="flex gap-2">
@@ -504,10 +507,10 @@ const Leaderboard: React.FC = () => {
                     value={friendEmail}
                     onChange={(e) => setFriendEmail(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && inviteFriend()}
-                    className="pl-9"
+                    className="pl-9 text-sm sm:text-base h-9 sm:h-10"
                   />
                 </div>
-                <Button onClick={inviteFriend} disabled={isInvitingFriend || !friendEmail.trim()}>
+                <Button onClick={inviteFriend} disabled={isInvitingFriend || !friendEmail.trim()} className="h-9 sm:h-10 px-3 sm:px-4">
                   {isInvitingFriend ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
@@ -519,9 +522,9 @@ const Leaderboard: React.FC = () => {
 
             {/* Friends Leaderboard */}
             <div className="bg-card rounded-xl border border-border overflow-hidden">
-              <div className="p-4 border-b border-border bg-muted/50 flex items-center justify-between">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Users className="w-5 h-5 text-primary" />
+              <div className="p-3 sm:p-4 border-b border-border bg-muted/50 flex items-center justify-between">
+                <h3 className="font-semibold flex items-center gap-2 text-sm sm:text-base">
+                  <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                   Ranking entre Amigos
                 </h3>
                 <Button 
@@ -529,6 +532,7 @@ const Leaderboard: React.FC = () => {
                   variant="ghost" 
                   onClick={fetchFriendsRanking}
                   disabled={isLoadingFriends}
+                  className="h-8 w-8 p-0"
                 >
                   <RefreshCw className={`w-4 h-4 ${isLoadingFriends ? 'animate-spin' : ''}`} />
                 </Button>
@@ -549,10 +553,10 @@ const Leaderboard: React.FC = () => {
                     />
                   ))
                 ) : (
-                  <div className="p-8 text-center text-muted-foreground">
-                    <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                    <p className="font-medium">Adicione amigos para competir!</p>
-                    <p className="text-sm mt-1">Use o email deles para conectar.</p>
+                  <div className="p-6 sm:p-8 text-center text-muted-foreground">
+                    <Users className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 opacity-50" />
+                    <p className="font-medium text-sm sm:text-base">Adicione amigos para competir!</p>
+                    <p className="text-xs sm:text-sm mt-1">Use o email deles para conectar.</p>
                   </div>
                 )}
               </div>
@@ -562,11 +566,11 @@ const Leaderboard: React.FC = () => {
           {/* Groups */}
           <TabsContent value="groups" className="space-y-4">
             {/* Create or Join Group */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:gap-4">
               {/* Create Group */}
-              <div className="bg-card rounded-xl border border-border p-4">
-                <h3 className="font-semibold mb-4 flex items-center gap-2">
-                  <Plus className="w-5 h-5 text-primary" />
+              <div className="bg-card rounded-xl border border-border p-3 sm:p-4">
+                <h3 className="font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+                  <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                   Criar Grupo
                 </h3>
                 <div className="flex gap-2">
@@ -575,8 +579,9 @@ const Leaderboard: React.FC = () => {
                     value={groupName}
                     onChange={(e) => setGroupName(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && createGroup()}
+                    className="text-sm sm:text-base h-9 sm:h-10"
                   />
-                  <Button onClick={createGroup} disabled={isCreatingGroup || !groupName.trim()}>
+                  <Button onClick={createGroup} disabled={isCreatingGroup || !groupName.trim()} className="h-9 sm:h-10 px-3 sm:px-4 text-sm">
                     {isCreatingGroup ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
@@ -587,9 +592,9 @@ const Leaderboard: React.FC = () => {
               </div>
 
               {/* Join Group */}
-              <div className="bg-card rounded-xl border border-border p-4">
-                <h3 className="font-semibold mb-4 flex items-center gap-2">
-                  <Users className="w-5 h-5 text-primary" />
+              <div className="bg-card rounded-xl border border-border p-3 sm:p-4">
+                <h3 className="font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+                  <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                   Entrar em Grupo
                 </h3>
                 <div className="flex gap-2">
@@ -598,8 +603,9 @@ const Leaderboard: React.FC = () => {
                     value={groupInviteCode}
                     onChange={(e) => setGroupInviteCode(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && joinGroup()}
+                    className="text-sm sm:text-base h-9 sm:h-10"
                   />
-                  <Button onClick={joinGroup} disabled={isJoiningGroup || !groupInviteCode.trim()}>
+                  <Button onClick={joinGroup} disabled={isJoiningGroup || !groupInviteCode.trim()} className="h-9 sm:h-10 px-3 sm:px-4 text-sm">
                     {isJoiningGroup ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
@@ -611,67 +617,68 @@ const Leaderboard: React.FC = () => {
             </div>
 
             {/* My Groups */}
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Target className="w-5 h-5 text-primary" />
-                  Meus Grupos de Evolução
+                <h3 className="font-semibold flex items-center gap-2 text-sm sm:text-base">
+                  <Target className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                  Meus Grupos
                 </h3>
                 <Button 
                   size="sm" 
                   variant="ghost" 
                   onClick={fetchGroups}
                   disabled={isLoadingGroups}
+                  className="h-8 w-8 p-0"
                 >
                   <RefreshCw className={`w-4 h-4 ${isLoadingGroups ? 'animate-spin' : ''}`} />
                 </Button>
               </div>
               
               {isLoadingGroups ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-3 sm:gap-4">
                   {Array.from({ length: 2 }).map((_, i) => (
-                    <div key={i} className="bg-card rounded-xl border border-border p-4 animate-pulse">
+                    <div key={i} className="bg-card rounded-xl border border-border p-3 sm:p-4 animate-pulse">
                       <Skeleton className="h-5 w-32 mb-2" />
                       <Skeleton className="h-4 w-24" />
                     </div>
                   ))}
                 </div>
               ) : groups.length === 0 ? (
-                <div className="bg-card rounded-xl border border-border p-8 text-center text-muted-foreground">
-                  <Target className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p className="font-medium">Você ainda não faz parte de nenhum grupo.</p>
-                  <p className="text-sm mt-1">Crie um ou peça um código de convite!</p>
+                <div className="bg-card rounded-xl border border-border p-6 sm:p-8 text-center text-muted-foreground">
+                  <Target className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 opacity-50" />
+                  <p className="font-medium text-sm sm:text-base">Você ainda não faz parte de nenhum grupo.</p>
+                  <p className="text-xs sm:text-sm mt-1">Crie um ou peça um código de convite!</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-3 sm:gap-4">
                   {groups.map((group) => (
-                    <div key={group.id} className="bg-card rounded-xl border border-border p-4 hover:border-primary/50 transition-colors">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h4 className="font-semibold text-foreground">{group.name}</h4>
+                    <div key={group.id} className="bg-card rounded-xl border border-border p-3 sm:p-4 hover:border-primary/50 transition-colors">
+                      <div className="flex items-start justify-between mb-2 sm:mb-3">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-semibold text-foreground text-sm sm:text-base truncate">{group.name}</h4>
                           {group.description && (
-                            <p className="text-sm text-muted-foreground">{group.description}</p>
+                            <p className="text-xs sm:text-sm text-muted-foreground truncate">{group.description}</p>
                           )}
                         </div>
                         {group.created_by === authUserId && (
-                          <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">Admin</span>
+                          <span className="text-[10px] sm:text-xs bg-primary/10 text-primary px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full ml-2 flex-shrink-0">Admin</span>
                         )}
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <code className="text-sm bg-muted px-2 py-1 rounded font-mono">
+                        <code className="text-xs sm:text-sm bg-muted px-2 py-1 rounded font-mono">
                           {group.invite_code}
                         </code>
                         <Button
                           size="sm"
                           variant="ghost"
                           onClick={() => copyInviteCode(group.invite_code)}
-                          className="h-8 w-8 p-0"
+                          className="h-7 w-7 sm:h-8 sm:w-8 p-0"
                         >
                           {copiedCode === group.invite_code ? (
-                            <Check className="w-4 h-4 text-green-500" />
+                            <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-500" />
                           ) : (
-                            <Copy className="w-4 h-4" />
+                            <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           )}
                         </Button>
                       </div>
@@ -693,12 +700,12 @@ const RankingRow: React.FC<{
   isCurrentUser: boolean;
   getRankIcon: (position: number) => React.ReactNode;
 }> = ({ player, position, isCurrentUser, getRankIcon }) => (
-  <div className={`flex items-center gap-4 p-4 ${isCurrentUser ? 'bg-primary/5 border-l-2 border-l-primary' : 'hover:bg-muted/50'} transition-colors`}>
-    <div className="w-8 flex justify-center">
+  <div className={`flex items-center gap-2 sm:gap-4 p-3 sm:p-4 ${isCurrentUser ? 'bg-primary/5 border-l-2 border-l-primary' : 'hover:bg-muted/50'} transition-colors`}>
+    <div className="w-6 sm:w-8 flex justify-center flex-shrink-0">
       {getRankIcon(position)}
     </div>
     
-    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-lg overflow-hidden">
+    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm sm:text-lg overflow-hidden flex-shrink-0">
       {player.avatar_url ? (
         <img src={player.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
       ) : (
@@ -707,22 +714,22 @@ const RankingRow: React.FC<{
     </div>
     
     <div className="flex-1 min-w-0">
-      <p className={`font-medium truncate ${isCurrentUser ? 'text-primary' : 'text-foreground'}`}>
+      <p className={`font-medium truncate text-sm sm:text-base ${isCurrentUser ? 'text-primary' : 'text-foreground'}`}>
         {player.name}
-        {isCurrentUser && <span className="text-xs ml-2 opacity-75">(você)</span>}
+        {isCurrentUser && <span className="text-[10px] sm:text-xs ml-1 sm:ml-2 opacity-75">(você)</span>}
       </p>
-      <p className="text-sm text-muted-foreground">
+      <p className="text-xs sm:text-sm text-muted-foreground">
         Nível {player.current_adaptive_level || 'A1'}
       </p>
     </div>
     
-    <div className="flex items-center gap-4 text-sm">
-      <div className="flex items-center gap-1 text-muted-foreground" title="Conversas">
-        <MessageSquare className="w-4 h-4" />
+    <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm flex-shrink-0">
+      <div className="flex items-center gap-0.5 sm:gap-1 text-muted-foreground" title="Conversas">
+        <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         <span>{player.total_conversations}</span>
       </div>
-      <div className="flex items-center gap-1 text-orange-500" title="Sequência atual">
-        <Flame className="w-4 h-4" />
+      <div className="flex items-center gap-0.5 sm:gap-1 text-orange-500" title="Sequência atual">
+        <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         <span>{player.current_streak || 0}</span>
       </div>
     </div>

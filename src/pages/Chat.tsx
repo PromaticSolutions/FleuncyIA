@@ -159,6 +159,9 @@ const Chat: React.FC = () => {
     }
   }, [scenario, user, toast, navigate]);
 
+  // Speak initial message only once with a ref to track
+  const hasSpokenInitialRef = useRef(false);
+  
   useEffect(() => {
     if (scenario && messages.length === 0) {
       const languageMessages = scenarioInitialMessages[userLanguage] || scenarioInitialMessages.english;
@@ -172,8 +175,14 @@ const Chat: React.FC = () => {
       };
       setMessages([initialMessage]);
       
-      // Always speak initial message
-      speak(initialMessage.content);
+      // Speak initial message after a brief delay, only once
+      if (!hasSpokenInitialRef.current) {
+        hasSpokenInitialRef.current = true;
+        // Small delay to ensure component is mounted and ready
+        setTimeout(() => {
+          speak(initialMessage.content);
+        }, 300);
+      }
     }
   }, [scenario, userLanguage]);
 
