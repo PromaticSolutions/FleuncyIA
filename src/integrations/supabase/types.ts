@@ -355,28 +355,22 @@ export type Database = {
           total_conversations: number | null
           user_id: string | null
         }
-        Insert: {
-          average_score?: number | null
-          current_adaptive_level?: string | null
-          current_streak?: number | null
-          longest_streak?: number | null
-          name?: string | null
-          total_conversations?: number | null
-          user_id?: string | null
-        }
-        Update: {
-          average_score?: number | null
-          current_adaptive_level?: string | null
-          current_streak?: number | null
-          longest_streak?: number | null
-          name?: string | null
-          total_conversations?: number | null
-          user_id?: string | null
-        }
         Relationships: []
       }
     }
     Functions: {
+      get_all_user_rankings: {
+        Args: never
+        Returns: {
+          average_score: number
+          current_adaptive_level: string
+          current_streak: number
+          longest_streak: number
+          name: string
+          total_conversations: number
+          user_id: string
+        }[]
+      }
       get_group_by_invite_code: {
         Args: { _invite_code: string }
         Returns: {
