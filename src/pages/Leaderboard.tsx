@@ -18,10 +18,12 @@ import {
   Plus,
   Search,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  ChevronRight
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { GroupDetailModal } from '@/components/GroupDetailModal';
 
 interface RankingUser {
   user_id: string;
@@ -80,6 +82,10 @@ const Leaderboard: React.FC = () => {
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [isInvitingFriend, setIsInvitingFriend] = useState(false);
   const [isJoiningGroup, setIsJoiningGroup] = useState(false);
+  
+  // Group detail modal
+  const [selectedGroup, setSelectedGroup] = useState<EvolutionGroup | null>(null);
+  const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
 
   // Fetch global ranking using secure view (excludes sensitive data like email)
   const fetchGlobalRanking = useCallback(async () => {
@@ -92,7 +98,12 @@ const Leaderboard: React.FC = () => {
         .order('total_conversations', { ascending: false })
         .limit(50);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching global ranking:', error);
+        throw error;
+      }
+      
+      console.log('[Leaderboard] Global ranking data:', data?.length || 0, 'users');
       // Map to RankingUser with null avatar_url (not exposed in view for privacy)
       setGlobalRanking((data || []).map(d => ({ ...d, avatar_url: null })) as RankingUser[]);
     } catch (error) {
@@ -112,18 +123,27 @@ const Leaderboard: React.FC = () => {
     if (!authUserId) return;
     setIsLoadingFriends(true);
     try {
+      // Get all friendships where user is involved and status is accepted
       const { data: friendships, error: friendshipsError } = await supabase
         .from('friendships')
-        .select('user_id, friend_id')
+        .select('user_id, friend_id, status')
         .or(`user_id.eq.${authUserId},friend_id.eq.${authUserId}`)
         .eq('status', 'accepted');
 
-      if (friendshipsError) throw friendshipsError;
+      if (friendshipsError) {
+        console.error('Error fetching friendships:', friendshipsError);
+        throw friendshipsError;
+      }
+
+      console.log('[Leaderboard] Friendships found:', friendships?.length || 0);
 
       if (friendships && friendships.length > 0) {
+        // Extract friend IDs (the other person in the relationship)
         const friendIds = friendships.map(f => 
           f.user_id === authUserId ? f.friend_id : f.user_id
         );
+        
+        console.log('[Leaderboard] Friend IDs:', friendIds);
         
         // Use secure view for friends ranking (excludes email, exposes only ranking data)
         const { data: profiles, error: profilesError } = await supabase
@@ -132,7 +152,12 @@ const Leaderboard: React.FC = () => {
           .in('user_id', [...friendIds, authUserId])
           .order('total_conversations', { ascending: false });
         
-        if (profilesError) throw profilesError;
+        if (profilesError) {
+          console.error('Error fetching friend profiles:', profilesError);
+          throw profilesError;
+        }
+        
+        console.log('[Leaderboard] Friends ranking profiles:', profiles?.length || 0);
         setFriendsRanking((profiles || []).map(d => ({ ...d, avatar_url: null })) as RankingUser[]);
       } else {
         // Only show current user if no friends
@@ -654,7 +679,14 @@ const Leaderboard: React.FC = () => {
               ) : (
                 <div className="grid grid-cols-1 gap-3 sm:gap-4">
                   {groups.map((group) => (
-                    <div key={group.id} className="bg-card rounded-xl border border-border p-3 sm:p-4 hover:border-primary/50 transition-colors">
+                    <button 
+                      key={group.id} 
+                      onClick={() => {
+                        setSelectedGroup(group);
+                        setIsGroupModalOpen(true);
+                      }}
+                      className="bg-card rounded-xl border border-border p-3 sm:p-4 hover:border-primary/50 transition-colors text-left w-full"
+                    >
                       <div className="flex items-start justify-between mb-2 sm:mb-3">
                         <div className="min-w-0 flex-1">
                           <h4 className="font-semibold text-foreground text-sm sm:text-base truncate">{group.name}</h4>
@@ -662,9 +694,12 @@ const Leaderboard: React.FC = () => {
                             <p className="text-xs sm:text-sm text-muted-foreground truncate">{group.description}</p>
                           )}
                         </div>
-                        {group.created_by === authUserId && (
-                          <span className="text-[10px] sm:text-xs bg-primary/10 text-primary px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full ml-2 flex-shrink-0">Admin</span>
-                        )}
+                        <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+                          {group.created_by === authUserId && (
+                            <span className="text-[10px] sm:text-xs bg-primary/10 text-primary px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">Admin</span>
+                          )}
+                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                        </div>
                       </div>
                       
                       <div className="flex items-center justify-between">
@@ -674,7 +709,10 @@ const Leaderboard: React.FC = () => {
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => copyInviteCode(group.invite_code)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            copyInviteCode(group.invite_code);
+                          }}
                           className="h-7 w-7 sm:h-8 sm:w-8 p-0"
                         >
                           {copiedCode === group.invite_code ? (
@@ -684,13 +722,22 @@ const Leaderboard: React.FC = () => {
                           )}
                         </Button>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}
             </div>
           </TabsContent>
         </Tabs>
+        
+        {/* Group Detail Modal */}
+        <GroupDetailModal
+          group={selectedGroup}
+          open={isGroupModalOpen}
+          onOpenChange={setIsGroupModalOpen}
+          onGroupLeft={fetchGroups}
+          onGroupDeleted={fetchGroups}
+        />
       </div>
     </AppLayout>
   );
