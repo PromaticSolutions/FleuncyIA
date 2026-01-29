@@ -151,16 +151,6 @@ const Landing: React.FC = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-16 px-6 bg-muted/30">
-        <div className="container mx-auto max-w-6xl">
-          <div className="grid grid-cols-3 md:grid-cols-3 gap-8">
-            <StatItem value="10k+" label={t('landing.stats.activeUsers')} />
-            <StatItem value="500k+" label={t('landing.stats.conversations')} />
-            <StatItem value="98%" label={t('landing.stats.satisfaction')} />
-          </div>
-        </div>
-      </section>
 
       {/* TBLT Methodology Section */}
       <section className="py-20 px-6">
