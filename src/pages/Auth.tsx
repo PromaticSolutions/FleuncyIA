@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useApp } from '@/contexts/AppContext';
-import { MessageCircle, Mail, Lock, User, CreditCard, ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { MessageCircle, Mail, Lock, User, ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -17,7 +17,7 @@ const Auth: React.FC = () => {
   
   const [showPassword, setShowPassword] = useState(false);
   const [loginData, setLoginData] = useState({ email: '', password: '' });
-  const [registerData, setRegisterData] = useState({ name: '', email: '', password: '', cpf: '' });
+  const [registerData, setRegisterData] = useState({ name: '', email: '', password: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -89,7 +89,6 @@ const Auth: React.FC = () => {
           emailRedirectTo: redirectUrl,
           data: {
             name: registerData.name,
-            cpf: registerData.cpf,
           },
         },
       });
@@ -325,18 +324,6 @@ const Auth: React.FC = () => {
                     <Eye className="w-5 h-5 text-muted-foreground" />
                   )}
                 </button>
-              </div>
-
-              <div className="relative">
-                <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder={t('auth.cpf')}
-                  className="pl-12"
-                  value={registerData.cpf}
-                  onChange={(e) => setRegisterData({ ...registerData, cpf: e.target.value })}
-                  required
-                />
               </div>
 
               <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>

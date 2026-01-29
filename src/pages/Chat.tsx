@@ -556,7 +556,7 @@ const Chat: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col h-[100dvh]">
       {/* Header */}
       <div className="bg-card border-b border-border px-3 py-3 flex items-center gap-2 sm:px-4 sm:gap-3">
         <button 
@@ -597,7 +597,7 @@ const Chat: React.FC = () => {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3 sm:px-4">
+      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3 sm:px-4 overscroll-contain">
         {messages.map((message) => (
           <div key={message.id} className="space-y-2">
             <div
@@ -689,7 +689,7 @@ const Chat: React.FC = () => {
       )}
 
       {/* Input Area */}
-      <div className="bg-card border-t border-border px-3 py-3 space-y-3 sm:px-4">
+      <div className="bg-card border-t border-border px-3 py-3 space-y-3 sm:px-4 pb-safe">
         <div className="flex items-center gap-2">
           <div className="flex-1">
             <Input

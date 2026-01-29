@@ -154,10 +154,9 @@ const Landing: React.FC = () => {
       {/* Stats Section */}
       <section className="py-16 px-6 bg-muted/30">
         <div className="container mx-auto max-w-6xl">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-3 md:grid-cols-3 gap-8">
             <StatItem value="10k+" label={t('landing.stats.activeUsers')} />
             <StatItem value="500k+" label={t('landing.stats.conversations')} />
-            <StatItem value="5" label={t('landing.stats.languages')} />
             <StatItem value="98%" label={t('landing.stats.satisfaction')} />
           </div>
         </div>

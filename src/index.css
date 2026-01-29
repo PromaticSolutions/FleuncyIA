@@ -236,3 +236,15 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground) / 0.5);
 }
+
+/* Safe area for mobile keyboards */
+.pb-safe {
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+/* Dynamic viewport height for mobile */
+@supports (height: 100dvh) {
+  .h-\[100dvh\] {
+    height: 100dvh;
+  }
+}

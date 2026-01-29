@@ -18,7 +18,7 @@ interface SupportChatProps {
 }
 
 const SUPPORT_CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/support-chat`;
-const WHATSAPP_NUMBER = '5511999999999'; // Substituir pelo número real
+const WHATSAPP_NUMBER = '5511934476935';
 
 export function SupportChat({ isOpen, onClose }: SupportChatProps) {
   const { user } = useApp();
@@ -248,7 +248,7 @@ export function SupportChat({ isOpen, onClose }: SupportChatProps) {
             <div>
               <h3 className="font-semibold text-white">Suporte Fluency IA</h3>
               <p className="text-xs text-white/70">
-                {ticketId ? `Ticket: ${ticketId.slice(0, 8)}...` : 'Online'}
+                {ticketId ? `#${ticketId.slice(-6).toUpperCase()}` : 'Online'}
               </p>
             </div>
           </div>
