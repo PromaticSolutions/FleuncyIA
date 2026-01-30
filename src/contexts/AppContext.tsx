@@ -20,6 +20,7 @@ interface AppContextType {
   updateUserProfile: (updates: Partial<User>) => void;
   logout: () => Promise<void>;
   isLoading: boolean;
+  refreshProfile: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -36,16 +37,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const isInitialized = useRef(false);
   const currentLoadingUserId = useRef<string | null>(null);
 
-  // Carregar perfil do banco de dados
-  const loadUserProfile = useCallback(async (userId: string, authEmail: string, authName: string): Promise<boolean> => {
+  // Carregar perfil do banco de dados com retry melhorado
+  const loadUserProfile = useCallback(async (userId: string, authEmail: string, authName: string, retryCount = 0): Promise<boolean> => {
     // Evitar carregar o mesmo usuário múltiplas vezes
-    if (currentLoadingUserId.current === userId) {
+    if (currentLoadingUserId.current === userId && retryCount === 0) {
       console.log('[AppContext] Already loading profile for:', userId);
       return false;
     }
     
     currentLoadingUserId.current = userId;
-    console.log('[AppContext] Loading profile for:', userId);
+    console.log('[AppContext] Loading profile for:', userId, 'retry:', retryCount);
     
     try {
       // Tentar buscar perfil existente
@@ -61,10 +62,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
 
       if (profileData) {
-        console.log('[AppContext] Profile found:', profileData.has_completed_onboarding);
+        console.log('[AppContext] Profile found:', profileData.name, 'onboarding:', profileData.has_completed_onboarding);
+        
+        // Usar nome do auth se o perfil tem nome padrão
+        const displayName = (profileData.name && profileData.name !== 'Usuário') 
+          ? profileData.name 
+          : (authName && authName !== 'Usuário' ? authName : profileData.name);
+        
         setUser({
           id: userId,
-          name: profileData.name !== 'Usuário' ? profileData.name : authName,
+          name: displayName,
           email: profileData.email || authEmail,
           avatar: profileData.avatar_url || undefined,
           language: profileData.language as Language,
@@ -77,37 +84,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         return true;
       }
       
-      // Perfil não existe, aguardar trigger criar e tentar novamente
-      console.log('[AppContext] Profile not found, waiting for trigger...');
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const { data: retryProfile } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
-      
-      if (retryProfile) {
-        console.log('[AppContext] Profile found on retry');
-        setUser({
-          id: userId,
-          name: retryProfile.name !== 'Usuário' ? retryProfile.name : authName,
-          email: retryProfile.email || authEmail,
-          language: retryProfile.language as Language,
-          level: retryProfile.level as Level,
-          weeklyGoal: retryProfile.weekly_goal as WeeklyGoal,
-          plan: isValidPlanType(retryProfile.plan) ? retryProfile.plan : 'free_trial',
-          createdAt: new Date(retryProfile.created_at),
-        });
-        setHasCompletedOnboarding(retryProfile.has_completed_onboarding);
-        return true;
+      // Perfil não existe, aguardar trigger criar e tentar novamente (máx 3 tentativas)
+      if (retryCount < 3) {
+        console.log('[AppContext] Profile not found, waiting for trigger... retry:', retryCount + 1);
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        currentLoadingUserId.current = null; // Reset para permitir retry
+        return loadUserProfile(userId, authEmail, authName, retryCount + 1);
       }
       
-      // Fallback: usar dados padrão
-      console.warn('[AppContext] Profile not found, using defaults');
+      // Fallback após todas tentativas: usar dados padrão
+      console.warn('[AppContext] Profile not found after retries, using defaults');
       setUser({
         id: userId,
-        name: authName,
+        name: authName || 'Usuário',
         email: authEmail,
         language: 'english',
         level: 'basic',
@@ -123,7 +112,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       // Em caso de erro, usar dados básicos para não bloquear o app
       setUser({
         id: userId,
-        name: authName,
+        name: authName || 'Usuário',
         email: authEmail,
         language: 'english',
         level: 'basic',
@@ -138,7 +127,44 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, []);
 
-  // Inicializar autenticação (evita loop / múltiplos listeners)
+  // Função para atualizar perfil manualmente
+  const refreshProfile = useCallback(async () => {
+    if (!authUserId) return;
+    
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (authUser) {
+      await loadUserProfile(
+        authUser.id,
+        authUser.email || '',
+        authUser.user_metadata?.name || authUser.user_metadata?.full_name || ''
+      );
+    }
+  }, [authUserId, loadUserProfile]);
+
+  // Load theme from database and apply it
+  const loadAndApplyTheme = async (userId: string) => {
+    try {
+      const { data } = await supabase
+        .from('user_settings')
+        .select('theme')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      if (data?.theme) {
+        const root = document.documentElement;
+        if (data.theme === 'dark') {
+          root.classList.add('dark');
+        } else {
+          root.classList.remove('dark');
+        }
+        localStorage.setItem('fluency_theme', data.theme);
+      }
+    } catch (err) {
+      console.error('[AppContext] Error loading theme:', err);
+    }
+  };
+
+  // Inicializar autenticação
   useEffect(() => {
     let cancelled = false;
 
@@ -157,14 +183,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         return;
       }
 
-      setIsLoading(true);
       setAuthUserId(session.user.id);
+
+      // Extrair nome do metadata (Google OAuth ou signup)
+      const userName = session.user.user_metadata?.name 
+        || session.user.user_metadata?.full_name 
+        || session.user.email?.split('@')[0] 
+        || '';
 
       await loadUserProfile(
         session.user.id,
         session.user.email || '',
-        session.user.user_metadata?.name || 'Usuário'
+        userName
       );
+
+      // Load and apply theme from database
+      await loadAndApplyTheme(session.user.id);
 
       if (!cancelled) {
         isInitialized.current = true;
@@ -182,6 +216,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (event === 'SIGNED_OUT') {
         clearState();
         if (!cancelled) setIsLoading(false);
+        return;
+      }
+
+      // Para TOKEN_REFRESHED, não recarregar se já temos usuário
+      if (event === 'TOKEN_REFRESHED' && user) {
+        console.log('[AppContext] Token refreshed, keeping current user');
         return;
       }
 
@@ -262,6 +302,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         updateUserProfile,
         logout,
         isLoading,
+        refreshProfile,
       }}
     >
       {children}

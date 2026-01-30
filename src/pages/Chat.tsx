@@ -14,6 +14,7 @@ import { useCredits } from '@/hooks/useCredits';
 import { useConversations } from '@/hooks/useConversations';
 import { useElevenLabsTTS } from '@/hooks/useElevenLabsTTS';
 import { CreditsDisplay } from '@/components/CreditsDisplay';
+import { VoicePreferenceModal } from '@/components/VoicePreferenceModal';
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
@@ -90,10 +91,33 @@ const Chat: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showTranslation, setShowTranslation] = useState<string | null>(null);
-  const [voiceEnabled] = useState(true); // Voice always enabled
   const [conversationId] = useState(() => crypto.randomUUID());
   const [authUserId, setAuthUserId] = useState<string | undefined>(undefined);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Voice preference state
+  const [showVoiceModal, setShowVoiceModal] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState<boolean | null>(null);
+  const voicePreferenceCheckedRef = useRef(false);
+  
+  // Check voice preference on mount
+  useEffect(() => {
+    if (!voicePreferenceCheckedRef.current) {
+      voicePreferenceCheckedRef.current = true;
+      const savedPreference = localStorage.getItem('fluency_voice_preference');
+      if (savedPreference !== null) {
+        setVoiceEnabled(savedPreference === 'true');
+      } else {
+        // Show modal only if preference hasn't been set
+        setShowVoiceModal(true);
+      }
+    }
+  }, []);
+  
+  const handleVoicePreferenceSelect = (enabled: boolean) => {
+    setVoiceEnabled(enabled);
+    localStorage.setItem('fluency_voice_preference', String(enabled));
+  };
 
   // Get authenticated user ID
   useEffect(() => {
@@ -177,8 +201,8 @@ const Chat: React.FC = () => {
       };
       setMessages([initialMessage]);
       
-      // Speak initial message after a brief delay, only once
-      if (!hasSpokenInitialRef.current) {
+      // Speak initial message after a brief delay, only once (if voice enabled)
+      if (!hasSpokenInitialRef.current && voiceEnabled) {
         hasSpokenInitialRef.current = true;
         // Small delay to ensure component is mounted and ready
         setTimeout(() => {
@@ -186,7 +210,7 @@ const Chat: React.FC = () => {
         }, 300);
       }
     }
-  }, [scenario, userLanguage]);
+  }, [scenario, userLanguage, voiceEnabled]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -413,8 +437,8 @@ const Chat: React.FC = () => {
         }));
       }
 
-      // Always speak assistant response with ElevenLabs
-      if (mainResponse) {
+      // Speak assistant response with ElevenLabs (if voice enabled)
+      if (mainResponse && voiceEnabled) {
         speak(mainResponse);
       }
 
@@ -733,14 +757,20 @@ const Chat: React.FC = () => {
           {isAnalyzing ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Analisando conversa...
+              {t('chat.analyzing')}
             </>
           ) : (
-            'Finalizar e gerar feedback'
+            t('chat.finishButton')
           )}
         </Button>
       </div>
-      {/* HelpButton is now global in App.tsx */}
+      
+      {/* Voice Preference Modal */}
+      <VoicePreferenceModal
+        open={showVoiceModal}
+        onOpenChange={setShowVoiceModal}
+        onSelectVoice={handleVoicePreferenceSelect}
+      />
     </div>
   );
 };

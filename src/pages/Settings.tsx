@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '@/contexts/AppContext';
+import { useTheme } from '@/hooks/useTheme';
 import {
   Globe,
   Bell,
@@ -29,16 +30,14 @@ const Settings: React.FC = () => {
   const { t } = useTranslation();
   const { user, logout, authUserId } = useApp();
   const { toast } = useToast();
+  const { theme, setTheme, isDark, loadThemeFromDB } = useTheme();
   
   const [notifications, setNotifications] = useState(true);
   const [sounds, setSounds] = useState(true);
-  const [darkMode, setDarkMode] = useState(() => {
-    return document.documentElement.classList.contains('dark');
-  });
   const [loadingPortal, setLoadingPortal] = useState(false);
   const [uiLanguage, setUILanguage] = useState<'pt-BR' | 'en'>(getCurrentUILanguage());
 
-  const saveSettings = useCallback(async (field: string, value: boolean) => {
+  const saveSettings = useCallback(async (field: string, value: boolean | string) => {
     if (!authUserId) return;
     
     try {
@@ -71,24 +70,23 @@ const Settings: React.FC = () => {
       if (data) {
         setNotifications(data.notifications_enabled);
         setSounds(data.voice_enabled);
-        if (data.theme === 'dark') {
-          setDarkMode(true);
-          document.documentElement.classList.add('dark');
-        }
+        // Theme is already loaded by useTheme hook
       }
     };
 
     loadSettings();
-  }, [authUserId]);
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    
+    // Load theme from DB if user is authenticated
+    if (authUserId) {
+      loadThemeFromDB(authUserId);
     }
-    saveSettings('theme', darkMode);
-  }, [darkMode, saveSettings]);
+  }, [authUserId, loadThemeFromDB]);
+
+  const handleThemeChange = (newDarkMode: boolean) => {
+    const newTheme = newDarkMode ? 'dark' : 'light';
+    setTheme(newTheme);
+    saveSettings('theme', newTheme);
+  };
 
   const handleUILanguageChange = (lang: 'pt-BR' | 'en') => {
     setUILanguage(lang);
@@ -256,11 +254,11 @@ const Settings: React.FC = () => {
                 }}
               />
               <ToggleSetting
-                icon={darkMode ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                icon={isDark ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
                 label={t('settings.preferences.darkMode')}
                 description={t('settings.preferences.darkModeDesc')}
-                checked={darkMode}
-                onChange={setDarkMode}
+                checked={isDark}
+                onChange={handleThemeChange}
               />
               <SettingItem
                 icon={<Mic className="w-5 h-5" />}

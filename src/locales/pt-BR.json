@@ -310,7 +310,15 @@
     },
     "translation": "Tradução",
     "scenarioLocked": "Cenário bloqueado",
-    "scenarioLockedDesc": "Faça upgrade para acessar este cenário."
+    "scenarioLockedDesc": "Faça upgrade para acessar este cenário.",
+    "voiceModal": {
+      "title": "Respostas por voz",
+      "description": "Deseja ativar respostas por voz durante a interação com a IA?",
+      "enable": "Ativar",
+      "enableDesc": "A IA responderá com voz natural",
+      "textOnly": "Manter apenas texto",
+      "textOnlyDesc": "Apenas respostas escritas"
+    }
   },
   "profile": {
     "title": "Perfil",

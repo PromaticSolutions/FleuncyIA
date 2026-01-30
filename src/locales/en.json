@@ -310,7 +310,15 @@
     },
     "translation": "Translation",
     "scenarioLocked": "Scenario locked",
-    "scenarioLockedDesc": "Upgrade to access this scenario."
+    "scenarioLockedDesc": "Upgrade to access this scenario.",
+    "voiceModal": {
+      "title": "Voice responses",
+      "description": "Would you like to enable voice responses during the AI interaction?",
+      "enable": "Enable",
+      "enableDesc": "The AI will respond with natural voice",
+      "textOnly": "Text only",
+      "textOnlyDesc": "Written responses only"
+    }
   },
   "profile": {
     "title": "Profile",
