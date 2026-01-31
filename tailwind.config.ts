@@ -59,10 +59,12 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         fluency: {
-          blue: "hsl(var(--fluency-blue))",
           purple: "hsl(var(--fluency-purple))",
-          "light-blue": "hsl(var(--fluency-light-blue))",
+          lilac: "hsl(var(--fluency-lilac))",
+          blue: "hsl(var(--fluency-blue))",
+          pink: "hsl(var(--fluency-pink))",
           "light-purple": "hsl(var(--fluency-light-purple))",
+          "light-blue": "hsl(var(--fluency-light-blue))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",

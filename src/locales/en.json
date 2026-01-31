@@ -288,10 +288,13 @@
     "speaking": "Speaking...",
     "online": "Online",
     "inputPlaceholder": "Type your message...",
+    "placeholder": "Type your message...",
     "finishButton": "Finish and generate feedback",
     "analyzing": "Analysing conversation...",
     "recordingIndicator": "Recording... Tap to send",
+    "recordingTapToSend": "Recording... Tap to send",
     "sendingMessage": "Sending message...",
+    "practiceSession": "Practice session",
     "scenarioNotFound": "Scenario not found",
     "errors": {
       "noCredits": "No credits",

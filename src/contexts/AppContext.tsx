@@ -164,9 +164,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
-  // Inicializar autenticação
+  // Inicializar autenticação - separando carga inicial de eventos
   useEffect(() => {
-    let cancelled = false;
+    let isMounted = true;
 
     const clearState = () => {
       setAuthUserId(null);
@@ -176,74 +176,95 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setCurrentConversation(null);
     };
 
-    const handleSession = async (session: any) => {
-      if (!session?.user) {
-        clearState();
-        if (!cancelled) setIsLoading(false);
-        return;
+    // Listener para mudanças CONTÍNUAS (NÃO controla isLoading)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (!isMounted) return;
+        console.log('[AppContext] Auth state changed:', event);
+
+        // INITIAL_SESSION é tratado pela carga inicial abaixo
+        if (event === 'INITIAL_SESSION') return;
+
+        if (event === 'SIGNED_OUT') {
+          clearState();
+          return;
+        }
+
+        // TOKEN_REFRESHED - manter usuário atual
+        if (event === 'TOKEN_REFRESHED') {
+          console.log('[AppContext] Token refreshed, session maintained');
+          return;
+        }
+
+        // SIGNED_IN após a carga inicial (ex: login em outra aba)
+        if (event === 'SIGNED_IN' && session?.user) {
+          setAuthUserId(session.user.id);
+          const userName = session.user.user_metadata?.name 
+            || session.user.user_metadata?.full_name 
+            || session.user.email?.split('@')[0] 
+            || '';
+          
+          // Fire and forget - não bloqueia
+          loadUserProfile(session.user.id, session.user.email || '', userName);
+          loadAndApplyTheme(session.user.id);
+        }
       }
+    );
 
-      setAuthUserId(session.user.id);
-
-      // Extrair nome do metadata (Google OAuth ou signup)
-      const userName = session.user.user_metadata?.name 
-        || session.user.user_metadata?.full_name 
-        || session.user.email?.split('@')[0] 
-        || '';
-
-      await loadUserProfile(
-        session.user.id,
-        session.user.email || '',
-        userName
-      );
-
-      // Load and apply theme from database
-      await loadAndApplyTheme(session.user.id);
-
-      if (!cancelled) {
-        isInitialized.current = true;
-        setIsLoading(false);
-      }
-    };
-
-    // Listener primeiro (evita perder eventos)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('[AppContext] Auth state changed:', event);
-
-      // Evita dupla carga (o getSession abaixo já faz a primeira)
-      if (event === 'INITIAL_SESSION') return;
-
-      if (event === 'SIGNED_OUT') {
-        clearState();
-        if (!cancelled) setIsLoading(false);
-        return;
-      }
-
-      // Para TOKEN_REFRESHED, não recarregar se já temos usuário
-      if (event === 'TOKEN_REFRESHED' && user) {
-        console.log('[AppContext] Token refreshed, keeping current user');
-        return;
-      }
-
-      await handleSession(session);
-    });
-
-    // Carga inicial
-    (async () => {
+    // CARGA INICIAL - controla isLoading
+    const initializeAuth = async () => {
       try {
         console.log('[AppContext] Initializing auth...');
-        const { data: { session } } = await supabase.auth.getSession();
-        if (cancelled) return;
-        await handleSession(session);
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('[AppContext] Session error:', error);
+          clearState();
+          return;
+        }
+        
+        if (!isMounted) return;
+
+        if (!session?.user) {
+          console.log('[AppContext] No active session');
+          clearState();
+          return;
+        }
+
+        console.log('[AppContext] Session found for:', session.user.email);
+        setAuthUserId(session.user.id);
+
+        // Extrair nome do metadata (Google OAuth ou signup)
+        const userName = session.user.user_metadata?.name 
+          || session.user.user_metadata?.full_name 
+          || session.user.email?.split('@')[0] 
+          || '';
+
+        // Aguardar carregamento do perfil ANTES de finalizar loading
+        await loadUserProfile(
+          session.user.id,
+          session.user.email || '',
+          userName
+        );
+
+        // Carregar tema
+        await loadAndApplyTheme(session.user.id);
+
       } catch (error) {
         console.error('[AppContext] Error initializing auth:', error);
         clearState();
-        if (!cancelled) setIsLoading(false);
+      } finally {
+        if (isMounted) {
+          isInitialized.current = true;
+          setIsLoading(false);
+        }
       }
-    })();
+    };
+
+    initializeAuth();
 
     return () => {
-      cancelled = true;
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, [loadUserProfile]);

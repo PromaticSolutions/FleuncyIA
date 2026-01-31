@@ -582,20 +582,19 @@ const Chat: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col h-[100dvh]">
-      {/* Header */}
-      <div className="bg-card border-b border-border px-3 py-3 flex items-center gap-2 sm:px-4 sm:gap-3">
+    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden">
+      {/* Header - fixed height */}
+      <div className="flex items-center gap-3 px-3 py-3 border-b border-border bg-card shrink-0 sm:px-4">
         <button 
-          onClick={() => navigate('/home')}
-          className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shrink-0"
+          onClick={() => navigate('/home')} 
+          className="w-10 h-10 rounded-xl hover:bg-muted flex items-center justify-center shrink-0"
         >
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
-        <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${scenario.color} flex items-center justify-center shrink-0`}>
-          <span className="text-xl">{scenario.icon}</span>
-        </div>
         <div className="flex-1 min-w-0">
-          <h1 className="font-semibold text-foreground truncate">{scenario.titleKey ? t(scenario.titleKey) : scenario.title}</h1>
+          <h2 className="font-semibold text-foreground truncate">
+            {scenario ? t(scenario.titleKey || `scenarios.${scenario.id}.title`) : t('chat.practiceSession')}
+          </h2>
           <p className="text-xs text-muted-foreground">
             {isTyping ? t('chat.typing') : isRecording ? t('chat.recording') : isTranscribing ? t('chat.processing') : isSpeaking || isTTSLoading ? t('chat.speaking') : t('chat.online')}
           </p>
@@ -622,8 +621,8 @@ const Chat: React.FC = () => {
         </button>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3 sm:px-4 overscroll-contain">
+      {/* Messages area - scrollable, takes remaining space */}
+      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3 sm:px-4 overscroll-contain min-h-0">
         {messages.map((message) => (
           <div key={message.id} className="space-y-2">
             <div
@@ -692,38 +691,39 @@ const Chat: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Recording indicator */}
+      {/* Recording indicator - fixed */}
       {isRecording && (
-        <div className="px-4 py-3 bg-destructive/10 border-t border-destructive/20 flex items-center justify-between">
+        <div className="px-4 py-3 bg-destructive/10 border-t border-destructive/20 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 bg-destructive rounded-full animate-pulse" />
-            <span className="text-sm text-destructive font-medium">Gravando... Toque para enviar</span>
+            <span className="text-sm text-destructive font-medium">{t('chat.recordingTapToSend')}</span>
           </div>
           <Button variant="ghost" size="sm" onClick={cancelRecording} className="text-destructive">
             <X className="w-4 h-4 mr-1" />
-            Cancelar
+            {t('common.cancel')}
           </Button>
         </div>
       )}
 
-      {/* Transcribing indicator */}
+      {/* Transcribing indicator - fixed */}
       {isTranscribing && (
-        <div className="px-4 py-3 bg-primary/10 border-t border-primary/20 flex items-center gap-2">
+        <div className="px-4 py-3 bg-primary/10 border-t border-primary/20 flex items-center gap-2 shrink-0">
           <Loader2 className="w-4 h-4 animate-spin text-primary" />
-          <span className="text-sm text-primary font-medium">Enviando mensagem...</span>
+          <span className="text-sm text-primary font-medium">{t('chat.sendingMessage')}</span>
         </div>
       )}
 
-      {/* Input Area */}
-      <div className="bg-card border-t border-border px-3 py-3 space-y-3 sm:px-4 pb-safe">
+      {/* Input Area - fixed at bottom */}
+      <div className="bg-card border-t border-border px-3 py-3 space-y-3 sm:px-4 pb-safe shrink-0">
         <div className="flex items-center gap-2">
           <div className="flex-1">
             <Input
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Digite sua mensagem..."
+              placeholder={t('chat.placeholder')}
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               disabled={isTyping || isRecording || isTranscribing}
+              className="bg-background"
             />
           </div>
           
