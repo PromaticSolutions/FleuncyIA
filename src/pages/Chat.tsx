@@ -185,8 +185,9 @@ const Chat: React.FC = () => {
     }
   }, [scenario, user, toast, navigate]);
 
-  // Speak initial message only once with a ref to track
+  // Track spoken messages to prevent re-speaking
   const hasSpokenInitialRef = useRef(false);
+  const lastSpokenMessageIdRef = useRef<string | null>(null);
   
   useEffect(() => {
     if (scenario && messages.length === 0) {
@@ -204,6 +205,7 @@ const Chat: React.FC = () => {
       // Speak initial message after a brief delay, only once (if voice enabled)
       if (!hasSpokenInitialRef.current && voiceEnabled) {
         hasSpokenInitialRef.current = true;
+        lastSpokenMessageIdRef.current = '1';
         // Small delay to ensure component is mounted and ready
         setTimeout(() => {
           speak(initialMessage.content);
@@ -437,8 +439,10 @@ const Chat: React.FC = () => {
         }));
       }
 
-      // Speak assistant response with ElevenLabs (if voice enabled)
-      if (mainResponse && voiceEnabled) {
+      // Speak ONLY this new assistant response (if voice enabled)
+      // Check if we haven't already spoken this message
+      if (mainResponse && voiceEnabled && lastSpokenMessageIdRef.current !== assistantMessageId) {
+        lastSpokenMessageIdRef.current = assistantMessageId;
         speak(mainResponse);
       }
 
