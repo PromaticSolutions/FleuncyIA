@@ -185,13 +185,13 @@ const Auth: React.FC = () => {
           <TabsList className="grid w-full grid-cols-2 mb-6 h-12 p-1 bg-muted rounded-xl">
             <TabsTrigger 
               value="login" 
-              className="rounded-lg font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="rounded-lg font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm text-muted-foreground"
             >
               {t('auth.login')}
             </TabsTrigger>
             <TabsTrigger 
               value="register"
-              className="rounded-lg font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="rounded-lg font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm text-muted-foreground"
             >
               {t('auth.register')}
             </TabsTrigger>
