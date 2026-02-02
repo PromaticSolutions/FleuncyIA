@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { TTSRequestSchema, validateRequest } from "../_shared/validation.ts";
-import { checkAndDeductCredits } from "../_shared/credits.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -81,12 +80,8 @@ serve(async (req) => {
     const { text, language } = validation.data;
     logStep("Request validated", { userId, textLength: text.length, language });
 
-    // Server-side credit check and deduction (audio request = true)
-    const creditResult = await checkAndDeductCredits(userId, true, corsHeaders);
-    if ('error' in creditResult) {
-      return creditResult.error;
-    }
-    logStep("Credits validated", { isPaidPlan: creditResult.result.isPaidPlan, remainingAudio: creditResult.result.remainingAudioCredits });
+    // NOTE: Credits are NOT deducted here - TTS is a response feature.
+    // Credits are only deducted when the user sends a message (text or audio).
 
     const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
     
