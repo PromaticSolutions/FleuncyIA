@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AppProvider } from "@/contexts/AppContext";
 import { HelpButton } from "@/components/HelpButton";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AdminRoute } from "@/components/AdminRoute";
 
 // Pages
 import Index from "./pages/Index";
@@ -26,16 +27,23 @@ import Achievements from "./pages/Achievements";
 import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
 
+// Dev/Admin Pages
+import DevLogin from "./pages/dev/DevLogin";
+import InvestorDashboard from "./pages/dev/InvestorDashboard";
+import ProductDashboard from "./pages/dev/ProductDashboard";
+import AcquisitionDashboard from "./pages/dev/AcquisitionDashboard";
+
 const queryClient = new QueryClient();
 
 // Pages where HelpButton should NOT appear
-const noHelpButtonRoutes = ['/', '/landing', '/splash', '/welcome', '/auth'];
+const noHelpButtonRoutes = ['/', '/landing', '/splash', '/welcome', '/auth', '/dev', '/dev/dashboard', '/dev/dashboard/product', '/dev/dashboard/acquisition'];
 
 function AppRoutes() {
   const location = useLocation();
-  // Hide on public pages AND on chat pages
+  // Hide on public pages, chat pages, and dev pages
   const isChatPage = location.pathname.startsWith('/chat/');
-  const showHelpButton = !noHelpButtonRoutes.includes(location.pathname) && !isChatPage;
+  const isDevPage = location.pathname.startsWith('/dev');
+  const showHelpButton = !noHelpButtonRoutes.includes(location.pathname) && !isChatPage && !isDevPage;
 
   return (
     <>
@@ -60,6 +68,12 @@ function AppRoutes() {
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
           <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+          
+          {/* Admin/Dev routes */}
+          <Route path="/dev" element={<DevLogin />} />
+          <Route path="/dev/dashboard" element={<AdminRoute><InvestorDashboard /></AdminRoute>} />
+          <Route path="/dev/dashboard/product" element={<AdminRoute><ProductDashboard /></AdminRoute>} />
+          <Route path="/dev/dashboard/acquisition" element={<AdminRoute><AcquisitionDashboard /></AdminRoute>} />
           
           <Route path="*" element={<NotFound />} />
         </Routes>
