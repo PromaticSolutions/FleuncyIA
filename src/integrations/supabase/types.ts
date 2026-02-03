@@ -14,6 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_users: {
+        Row: {
+          created_at: string
+          id: string
+          permissions: Json | null
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permissions?: Json | null
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permissions?: Json | null
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      analytics_events: {
+        Row: {
+          created_at: string
+          event_category: string
+          event_name: string
+          id: string
+          metadata: Json | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_category: string
+          event_name: string
+          id?: string
+          metadata?: Json | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_category?: string
+          event_name?: string
+          id?: string
+          metadata?: Json | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      analytics_sessions: {
+        Row: {
+          browser: string | null
+          country: string | null
+          created_at: string
+          device_type: string | null
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          session_id: string
+          source_channel: string | null
+          started_at: string
+          user_id: string | null
+        }
+        Insert: {
+          browser?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          session_id?: string
+          source_channel?: string | null
+          started_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          browser?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          session_id?: string
+          source_channel?: string | null
+          started_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           created_at: string
@@ -359,6 +458,14 @@ export type Database = {
       }
     }
     Functions: {
+      get_active_users_metrics: {
+        Args: { _end_date?: string; _start_date?: string }
+        Returns: {
+          daily_active_users: number
+          monthly_active_users: number
+          weekly_active_users: number
+        }[]
+      }
       get_all_user_rankings: {
         Args: never
         Returns: {
@@ -371,6 +478,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_events_count: {
+        Args: { _end_date?: string; _event_name: string; _start_date?: string }
+        Returns: number
+      }
       get_group_by_invite_code: {
         Args: { _invite_code: string }
         Returns: {
@@ -379,8 +490,25 @@ export type Database = {
           name: string
         }[]
       }
+      get_growth_metrics: {
+        Args: never
+        Returns: {
+          current_month_users: number
+          growth_rate: number
+          previous_month_users: number
+        }[]
+      }
+      get_retention_metrics: {
+        Args: never
+        Returns: {
+          retention_d1: number
+          retention_d30: number
+          retention_d7: number
+        }[]
+      }
       get_user_group_ids: { Args: { _user_id: string }; Returns: string[] }
       get_user_id_by_email: { Args: { _email: string }; Returns: string }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_group_creator: {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
