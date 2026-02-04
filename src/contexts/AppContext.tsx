@@ -35,96 +35,105 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   
   // Prevenir race conditions
   const isInitialized = useRef(false);
-  const currentLoadingUserId = useRef<string | null>(null);
+  const currentLoadingPromiseRef = useRef<Promise<boolean> | null>(null);
+  const currentLoadingUserIdRef = useRef<string | null>(null);
 
   // Carregar perfil do banco de dados com retry melhorado
   const loadUserProfile = useCallback(async (userId: string, authEmail: string, authName: string, retryCount = 0): Promise<boolean> => {
-    // Evitar carregar o mesmo usuário múltiplas vezes
-    if (currentLoadingUserId.current === userId && retryCount === 0) {
-      console.log('[AppContext] Already loading profile for:', userId);
-      return false;
+    // Se já está carregando o mesmo usuário, aguardar a promise existente
+    if (currentLoadingUserIdRef.current === userId && currentLoadingPromiseRef.current && retryCount === 0) {
+      console.log('[AppContext] Waiting for existing profile load:', userId);
+      return currentLoadingPromiseRef.current;
     }
     
-    currentLoadingUserId.current = userId;
-    console.log('[AppContext] Loading profile for:', userId, 'retry:', retryCount);
-    
-    try {
-      // Tentar buscar perfil existente
-      const { data: profileData, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
+    // Criar nova promise para este carregamento
+    const loadPromise = (async (): Promise<boolean> => {
+      currentLoadingUserIdRef.current = userId;
+      console.log('[AppContext] Loading profile for:', userId, 'retry:', retryCount);
+      
+      try {
+        // Tentar buscar perfil existente
+        const { data: profileData, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
 
-      if (error) {
-        console.error('[AppContext] Error fetching profile:', error);
-        throw error;
-      }
+        if (error) {
+          console.error('[AppContext] Error fetching profile:', error);
+          throw error;
+        }
 
-      if (profileData) {
-        console.log('[AppContext] Profile found:', profileData.name, 'onboarding:', profileData.has_completed_onboarding);
+        if (profileData) {
+          console.log('[AppContext] Profile found:', profileData.name, 'onboarding:', profileData.has_completed_onboarding);
+          
+          // Usar nome do auth se o perfil tem nome padrão
+          const displayName = (profileData.name && profileData.name !== 'Usuário') 
+            ? profileData.name 
+            : (authName && authName !== 'Usuário' ? authName : profileData.name);
+          
+          setUser({
+            id: userId,
+            name: displayName,
+            email: profileData.email || authEmail,
+            avatar: profileData.avatar_url || undefined,
+            language: profileData.language as Language,
+            level: profileData.level as Level,
+            weeklyGoal: profileData.weekly_goal as WeeklyGoal,
+            plan: isValidPlanType(profileData.plan) ? profileData.plan : 'free_trial',
+            createdAt: new Date(profileData.created_at),
+          });
+          setHasCompletedOnboarding(profileData.has_completed_onboarding);
+          return true;
+        }
         
-        // Usar nome do auth se o perfil tem nome padrão
-        const displayName = (profileData.name && profileData.name !== 'Usuário') 
-          ? profileData.name 
-          : (authName && authName !== 'Usuário' ? authName : profileData.name);
+        // Perfil não existe, aguardar trigger criar e tentar novamente (máx 3 tentativas)
+        if (retryCount < 3) {
+          console.log('[AppContext] Profile not found, waiting for trigger... retry:', retryCount + 1);
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          currentLoadingUserIdRef.current = null;
+          currentLoadingPromiseRef.current = null;
+          return loadUserProfile(userId, authEmail, authName, retryCount + 1);
+        }
         
+        // Fallback após todas tentativas: usar dados padrão
+        console.warn('[AppContext] Profile not found after retries, using defaults');
         setUser({
           id: userId,
-          name: displayName,
-          email: profileData.email || authEmail,
-          avatar: profileData.avatar_url || undefined,
-          language: profileData.language as Language,
-          level: profileData.level as Level,
-          weeklyGoal: profileData.weekly_goal as WeeklyGoal,
-          plan: isValidPlanType(profileData.plan) ? profileData.plan : 'free_trial',
-          createdAt: new Date(profileData.created_at),
+          name: authName || 'Usuário',
+          email: authEmail,
+          language: 'english',
+          level: 'basic',
+          weeklyGoal: 5,
+          plan: 'free_trial',
+          createdAt: new Date(),
         });
-        setHasCompletedOnboarding(profileData.has_completed_onboarding);
+        setHasCompletedOnboarding(false);
         return true;
+        
+      } catch (err) {
+        console.error('[AppContext] Error loading user profile:', err);
+        // Em caso de erro, usar dados básicos para não bloquear o app
+        setUser({
+          id: userId,
+          name: authName || 'Usuário',
+          email: authEmail,
+          language: 'english',
+          level: 'basic',
+          weeklyGoal: 5,
+          plan: 'free_trial',
+          createdAt: new Date(),
+        });
+        setHasCompletedOnboarding(false);
+        return true;
+      } finally {
+        currentLoadingUserIdRef.current = null;
+        currentLoadingPromiseRef.current = null;
       }
-      
-      // Perfil não existe, aguardar trigger criar e tentar novamente (máx 3 tentativas)
-      if (retryCount < 3) {
-        console.log('[AppContext] Profile not found, waiting for trigger... retry:', retryCount + 1);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        currentLoadingUserId.current = null; // Reset para permitir retry
-        return loadUserProfile(userId, authEmail, authName, retryCount + 1);
-      }
-      
-      // Fallback após todas tentativas: usar dados padrão
-      console.warn('[AppContext] Profile not found after retries, using defaults');
-      setUser({
-        id: userId,
-        name: authName || 'Usuário',
-        email: authEmail,
-        language: 'english',
-        level: 'basic',
-        weeklyGoal: 5,
-        plan: 'free_trial',
-        createdAt: new Date(),
-      });
-      setHasCompletedOnboarding(false);
-      return true;
-      
-    } catch (err) {
-      console.error('[AppContext] Error loading user profile:', err);
-      // Em caso de erro, usar dados básicos para não bloquear o app
-      setUser({
-        id: userId,
-        name: authName || 'Usuário',
-        email: authEmail,
-        language: 'english',
-        level: 'basic',
-        weeklyGoal: 5,
-        plan: 'free_trial',
-        createdAt: new Date(),
-      });
-      setHasCompletedOnboarding(false);
-      return true;
-    } finally {
-      currentLoadingUserId.current = null;
-    }
+    })();
+    
+    currentLoadingPromiseRef.current = loadPromise;
+    return loadPromise;
   }, []);
 
   // Função para atualizar perfil manualmente
