@@ -15,6 +15,7 @@ import { useConversations } from '@/hooks/useConversations';
 import { useElevenLabsTTS } from '@/hooks/useElevenLabsTTS';
 import { CreditsDisplay } from '@/components/CreditsDisplay';
 import { VoicePreferenceModal } from '@/components/VoicePreferenceModal';
+import { useVoicePreference } from '@/hooks/useVoicePreference';
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
@@ -95,31 +96,7 @@ const Chat: React.FC = () => {
   const [authUserId, setAuthUserId] = useState<string | undefined>(undefined);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Voice preference state
-  const [showVoiceModal, setShowVoiceModal] = useState(false);
-  const [voiceEnabled, setVoiceEnabled] = useState<boolean | null>(null);
-  const voicePreferenceCheckedRef = useRef(false);
-  
-  // Check voice preference on mount
-  useEffect(() => {
-    if (!voicePreferenceCheckedRef.current) {
-      voicePreferenceCheckedRef.current = true;
-      const savedPreference = localStorage.getItem('fluency_voice_preference');
-      if (savedPreference !== null) {
-        setVoiceEnabled(savedPreference === 'true');
-      } else {
-        // Show modal only if preference hasn't been set
-        setShowVoiceModal(true);
-      }
-    }
-  }, []);
-  
-  const handleVoicePreferenceSelect = (enabled: boolean) => {
-    setVoiceEnabled(enabled);
-    localStorage.setItem('fluency_voice_preference', String(enabled));
-  };
-
-  // Get authenticated user ID
+  // Get authenticated user ID first
   useEffect(() => {
     const getUser = async () => {
       const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -127,6 +104,22 @@ const Chat: React.FC = () => {
     };
     getUser();
   }, []);
+  
+  // Global voice preference - persisted to database
+  const { voiceEnabled, isLoading: isVoiceLoading, shouldShowModal, setPreference } = useVoicePreference({ userId: authUserId });
+  const [showVoiceModal, setShowVoiceModal] = useState(false);
+  
+  // Show modal when needed
+  useEffect(() => {
+    if (shouldShowModal) {
+      setShowVoiceModal(true);
+    }
+  }, [shouldShowModal]);
+  
+  const handleVoicePreferenceSelect = (enabled: boolean) => {
+    setPreference(enabled);
+    setShowVoiceModal(false);
+  };
 
   const userLanguage = (user?.language || 'english') as Language;
 
@@ -135,13 +128,20 @@ const Chat: React.FC = () => {
   const { saveConversation } = useConversations(authUserId);
   
   // ElevenLabs TTS - humanized voice
-  const { speak, stop, isSpeaking, isLoading: isTTSLoading } = useElevenLabsTTS({ 
+  // CRITICAL: Always stop previous audio before speaking new content
+  const { speak: speakTTS, stop: stopTTS, isSpeaking, isLoading: isTTSLoading } = useElevenLabsTTS({ 
     language: userLanguage,
     onError: (error) => {
       console.error('TTS error:', error);
       // Fallback silently - don't show error to user
     }
   });
+
+  // Wrapper to ensure we always cancel previous audio before speaking
+  const speakNewMessage = useCallback((text: string) => {
+    stopTTS(); // Always cancel any previous audio first
+    speakTTS(text);
+  }, [stopTTS, speakTTS]);
 
   // Handle auto-send after transcription
   const handleAutoSendAudio = useCallback((text: string) => {
@@ -188,31 +188,37 @@ const Chat: React.FC = () => {
   // Track spoken messages to prevent re-speaking
   const hasSpokenInitialRef = useRef(false);
   const lastSpokenMessageIdRef = useRef<string | null>(null);
+  const initialMessageSetRef = useRef(false);
   
+  // Initialize chat with first AI message
   useEffect(() => {
-    if (scenario && messages.length === 0) {
-      const languageMessages = scenarioInitialMessages[userLanguage] || scenarioInitialMessages.english;
-      const initialContent = languageMessages[scenario.id] || languageMessages.interview || "Hello! Let's practice together.";
-      
-      const initialMessage: Message = {
-        id: '1',
-        role: 'assistant',
-        content: initialContent,
-        timestamp: new Date(),
-      };
-      setMessages([initialMessage]);
-      
-      // Speak initial message after a brief delay, only once (if voice enabled)
-      if (!hasSpokenInitialRef.current && voiceEnabled) {
-        hasSpokenInitialRef.current = true;
-        lastSpokenMessageIdRef.current = '1';
-        // Small delay to ensure component is mounted and ready
-        setTimeout(() => {
-          speak(initialMessage.content);
-        }, 300);
-      }
+    // Wait for voice preference to load before initializing
+    if (isVoiceLoading || initialMessageSetRef.current) return;
+    if (!scenario || messages.length > 0) return;
+    
+    initialMessageSetRef.current = true;
+    
+    const languageMessages = scenarioInitialMessages[userLanguage] || scenarioInitialMessages.english;
+    const initialContent = languageMessages[scenario.id] || languageMessages.interview || "Hello! Let's practice together.";
+    
+    const initialMessage: Message = {
+      id: '1',
+      role: 'assistant',
+      content: initialContent,
+      timestamp: new Date(),
+    };
+    setMessages([initialMessage]);
+    
+    // Speak initial message ONLY if voice is enabled and we haven't spoken yet
+    if (voiceEnabled === true && !hasSpokenInitialRef.current) {
+      hasSpokenInitialRef.current = true;
+      lastSpokenMessageIdRef.current = '1';
+      // Delay to ensure component is mounted
+      setTimeout(() => {
+        speakNewMessage(initialContent);
+      }, 500);
     }
-  }, [scenario, userLanguage, voiceEnabled]);
+  }, [scenario, userLanguage, voiceEnabled, isVoiceLoading, messages.length, speakNewMessage]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -440,10 +446,10 @@ const Chat: React.FC = () => {
       }
 
       // Speak ONLY this new assistant response (if voice enabled)
-      // Check if we haven't already spoken this message
-      if (mainResponse && voiceEnabled && lastSpokenMessageIdRef.current !== assistantMessageId) {
+      // CRITICAL: Stop any previous audio and speak ONLY the new response
+      if (mainResponse && voiceEnabled === true && lastSpokenMessageIdRef.current !== assistantMessageId) {
         lastSpokenMessageIdRef.current = assistantMessageId;
-        speak(mainResponse);
+        speakNewMessage(mainResponse);
       }
 
       // Auto-save conversation after each message exchange
@@ -575,9 +581,9 @@ const Chat: React.FC = () => {
 
   const handleSpeakMessage = (content: string) => {
     if (isSpeaking) {
-      stop();
+      stopTTS();
     } else {
-      speak(content);
+      speakNewMessage(content);
     }
   };
 
