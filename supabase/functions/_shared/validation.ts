@@ -53,7 +53,10 @@ export const TTSRequestSchema = z.object({
 // Speech-to-text request validation
 export const STTRequestSchema = z.object({
   audio: z.string().min(1).max(15 * 1024 * 1024), // Max ~15MB base64 (~11MB binary)
-  mimeType: z.enum(['audio/webm', 'audio/wav', 'audio/mp3', 'audio/mpeg', 'audio/ogg']).optional().default('audio/webm'),
+  mimeType: z.string().refine(
+    (val) => val.startsWith('audio/'),
+    { message: 'Invalid audio MIME type' }
+  ).optional().default('audio/webm'),
   language: z.enum(VALID_LANGUAGES).optional().default('english'),
 });
 
