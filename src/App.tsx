@@ -12,7 +12,6 @@ import { AdminRoute } from "@/components/AdminRoute";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
 import Splash from "./pages/Splash";
-import Welcome from "./pages/Welcome";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import Home from "./pages/Home";
@@ -36,7 +35,7 @@ import AcquisitionDashboard from "./pages/dev/AcquisitionDashboard";
 const queryClient = new QueryClient();
 
 // Pages where HelpButton should NOT appear
-const noHelpButtonRoutes = ['/', '/landing', '/splash', '/welcome', '/auth', '/dev', '/dev/dashboard', '/dev/dashboard/product', '/dev/dashboard/acquisition'];
+const noHelpButtonRoutes = ['/', '/landing', '/splash', '/auth', '/dev', '/dev/dashboard', '/dev/dashboard/product', '/dev/dashboard/acquisition'];
 
 function AppRoutes() {
   const location = useLocation();
@@ -53,7 +52,6 @@ function AppRoutes() {
           <Route path="/" element={<Index />} />
           <Route path="/landing" element={<Landing />} />
           <Route path="/splash" element={<Splash />} />
-          <Route path="/welcome" element={<Welcome />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/onboarding" element={<Onboarding />} />
           

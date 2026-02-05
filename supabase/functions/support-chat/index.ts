@@ -78,7 +78,17 @@ serve(async (req) => {
     const sanitizedUserName = (userName || 'Usuário').replace(/[<>{}[\]]/g, '').substring(0, 50);
     const sanitizedTicketId = ticketId || 'N/A';
 
+    // Get current date for context
+    const currentDate = new Date().toLocaleDateString('pt-BR', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
     const systemPrompt = `Você é um assistente de suporte da Fluency IA, um aplicativo de aprendizado de idiomas.
+
+Data atual: ${currentDate}
 
 Sua função:
 1. Entender a dúvida ou problema do usuário

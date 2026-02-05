@@ -163,7 +163,7 @@ const Auth: React.FC = () => {
       {/* Header */}
       <div className="p-4">
         <button 
-          onClick={() => navigate('/welcome')}
+          onClick={() => navigate('/landing')}
           className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
         >
           <ArrowLeft className="w-5 h-5 text-foreground" />
