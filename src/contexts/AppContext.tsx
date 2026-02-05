@@ -20,6 +20,7 @@ interface AppContextType {
   updateUserProfile: (updates: Partial<User>) => void;
   logout: () => Promise<void>;
   isLoading: boolean;
+  isProfileLoading: boolean;
   refreshProfile: () => Promise<void>;
 }
 
@@ -32,6 +33,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
   
   // Prevenir race conditions
   const isInitialized = useRef(false);
@@ -49,6 +51,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     // Criar nova promise para este carregamento
     const loadPromise = (async (): Promise<boolean> => {
       currentLoadingUserIdRef.current = userId;
+      if (retryCount === 0) setIsProfileLoading(true);
       console.log('[AppContext] Loading profile for:', userId, 'retry:', retryCount);
       
       try {
@@ -129,6 +132,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       } finally {
         currentLoadingUserIdRef.current = null;
         currentLoadingPromiseRef.current = null;
+        setIsProfileLoading(false);
       }
     })();
     
@@ -332,6 +336,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         updateUserProfile,
         logout,
         isLoading,
+        isProfileLoading,
         refreshProfile,
       }}
     >

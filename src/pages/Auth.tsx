@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 const Auth: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { isAuthenticated, hasCompletedOnboarding, isLoading } = useApp();
+  const { isAuthenticated, hasCompletedOnboarding, isLoading, isProfileLoading } = useApp();
   const { toast } = useToast();
   
   const [showPassword, setShowPassword] = useState(false);
@@ -21,14 +21,15 @@ const Auth: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
+    // Aguardar carregamento completo do perfil antes de redirecionar
+    if (!isLoading && !isProfileLoading && isAuthenticated) {
       if (hasCompletedOnboarding) {
         navigate('/home');
       } else {
         navigate('/onboarding');
       }
     }
-  }, [isAuthenticated, hasCompletedOnboarding, isLoading, navigate]);
+  }, [isAuthenticated, hasCompletedOnboarding, isLoading, isProfileLoading, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,7 +151,7 @@ const Auth: React.FC = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isProfileLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />

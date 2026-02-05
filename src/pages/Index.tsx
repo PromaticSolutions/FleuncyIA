@@ -5,11 +5,11 @@ import { Loader2 } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated, hasCompletedOnboarding, isLoading } = useApp();
+  const { isAuthenticated, hasCompletedOnboarding, isLoading, isProfileLoading } = useApp();
 
   useEffect(() => {
     // Wait for loading to complete before making any navigation decisions
-    if (isLoading) return;
+    if (isLoading || isProfileLoading) return;
 
     if (isAuthenticated) {
       if (hasCompletedOnboarding) {
@@ -20,7 +20,7 @@ const Index = () => {
     } else {
       navigate('/landing', { replace: true });
     }
-  }, [isAuthenticated, hasCompletedOnboarding, isLoading, navigate]);
+  }, [isAuthenticated, hasCompletedOnboarding, isLoading, isProfileLoading, navigate]);
 
   // Show loading spinner while determining auth state
   return (
