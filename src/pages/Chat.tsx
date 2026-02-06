@@ -127,19 +127,25 @@ const Chat: React.FC = () => {
   const { credits, useCredit, useAudioCredit, canSendMessage, canSendAudio, hasUnlimitedCredits } = useCredits(authUserId, user?.plan);
   const { saveConversation } = useConversations(authUserId);
   
+  // Track which message is currently being played
+  const currentPlayingMessageIdRef = useRef<string | null>(null);
+
   // ElevenLabs TTS - humanized voice
-  // CRITICAL: Always stop previous audio before speaking new content
   const { speak: speakTTS, stop: stopTTS, isSpeaking, isLoading: isTTSLoading } = useElevenLabsTTS({ 
     language: userLanguage,
+    onEnd: () => {
+      currentPlayingMessageIdRef.current = null;
+    },
     onError: (error) => {
       console.error('TTS error:', error);
-      // Fallback silently - don't show error to user
+      currentPlayingMessageIdRef.current = null;
     }
   });
 
-  // Wrapper to ensure we always cancel previous audio before speaking
-  const speakNewMessage = useCallback((text: string) => {
-    stopTTS(); // Always cancel any previous audio first
+  // Speak a specific message - always stops previous audio first
+  const speakMessage = useCallback((text: string, messageId: string) => {
+    stopTTS(); // Cancel any previous audio (aborts fetch + stops playback)
+    currentPlayingMessageIdRef.current = messageId;
     speakTTS(text);
   }, [stopTTS, speakTTS]);
 
@@ -215,10 +221,10 @@ const Chat: React.FC = () => {
       lastSpokenMessageIdRef.current = '1';
       // Delay to ensure component is mounted
       setTimeout(() => {
-        speakNewMessage(initialContent);
+        speakMessage(initialContent, '1');
       }, 500);
     }
-  }, [scenario, userLanguage, voiceEnabled, isVoiceLoading, messages.length, speakNewMessage]);
+  }, [scenario, userLanguage, voiceEnabled, isVoiceLoading, messages.length, speakMessage]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -449,7 +455,7 @@ const Chat: React.FC = () => {
       // CRITICAL: Stop any previous audio and speak ONLY the new response
       if (mainResponse && voiceEnabled === true && lastSpokenMessageIdRef.current !== assistantMessageId) {
         lastSpokenMessageIdRef.current = assistantMessageId;
-        speakNewMessage(mainResponse);
+        speakMessage(mainResponse, assistantMessageId);
       }
 
       // Auto-save conversation after each message exchange
@@ -579,11 +585,14 @@ const Chat: React.FC = () => {
 
   // Voice is always on - no toggle needed
 
-  const handleSpeakMessage = (content: string) => {
-    if (isSpeaking) {
+  const handleSpeakMessage = (messageId: string, content: string) => {
+    // If already playing THIS message, stop it
+    if (isSpeaking && currentPlayingMessageIdRef.current === messageId) {
       stopTTS();
+      currentPlayingMessageIdRef.current = null;
     } else {
-      speakNewMessage(content);
+      // Stop any other audio and play this message
+      speakMessage(content, messageId);
     }
   };
 
@@ -659,8 +668,12 @@ const Chat: React.FC = () => {
                         <Languages className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleSpeakMessage(message.content)}
-                        className={`text-xs hover:underline ${isSpeaking ? 'text-primary' : 'text-muted-foreground'}`}
+                        onClick={() => handleSpeakMessage(message.id, message.content)}
+                        className={`text-xs hover:underline ${
+                          (isSpeaking || isTTSLoading) && currentPlayingMessageIdRef.current === message.id 
+                            ? 'text-primary' 
+                            : 'text-muted-foreground'
+                        }`}
                       >
                         <Volume2 className="w-4 h-4" />
                       </button>
