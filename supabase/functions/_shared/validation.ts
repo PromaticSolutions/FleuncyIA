@@ -21,9 +21,10 @@ export const ChatRequestSchema = z.object({
   scenarioId: z.enum(VALID_SCENARIOS),
   userLevel: z.enum(VALID_LEVELS).optional(),
   userLanguage: z.enum(VALID_LANGUAGES).optional().default('english'),
-  adaptiveLevel: z.enum(VALID_LEVELS).optional(),
+  adaptiveLevel: z.enum(VALID_LEVELS).optional().nullable(),
   includeInstantFeedback: z.boolean().optional().default(false),
   uiLanguage: z.string().optional(), // UI language for feedback (pt-BR or en)
+  isDemoMode: z.boolean().optional().default(false), // Public demo mode - no auth required
 });
 
 // Analyze conversation request validation

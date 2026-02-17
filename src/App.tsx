@@ -25,6 +25,7 @@ import Settings from "./pages/Settings";
 import Achievements from "./pages/Achievements";
 import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
+import ChatDemo from "./pages/ChatDemo";
 
 // Dev/Admin Pages
 import DevLogin from "./pages/dev/DevLogin";
@@ -35,7 +36,7 @@ import AcquisitionDashboard from "./pages/dev/AcquisitionDashboard";
 const queryClient = new QueryClient();
 
 // Pages where HelpButton should NOT appear
-const noHelpButtonRoutes = ['/', '/landing', '/splash', '/auth', '/dev', '/dev/dashboard', '/dev/dashboard/product', '/dev/dashboard/acquisition'];
+const noHelpButtonRoutes = ['/', '/landing', '/splash', '/auth', '/chat-demo', '/dev', '/dev/dashboard', '/dev/dashboard/product', '/dev/dashboard/acquisition'];
 
 function AppRoutes() {
   const location = useLocation();
@@ -53,6 +54,7 @@ function AppRoutes() {
           <Route path="/landing" element={<Landing />} />
           <Route path="/splash" element={<Splash />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/chat-demo" element={<ChatDemo />} />
           <Route path="/onboarding" element={<Onboarding />} />
           
           {/* Protected routes - require auth + onboarding */}

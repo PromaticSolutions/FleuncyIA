@@ -148,29 +148,43 @@ serve(async (req) => {
   }
 
   try {
-    // Authenticate user
-    const authResult = await authenticateUser(req);
-    if (authResult instanceof Response) {
-      return authResult;
-    }
-    const { userId } = authResult;
-
-    // Validate request body
+    // Validate request body first (before auth, so we can check isDemoMode)
     const validation = await validateRequest(req, ChatRequestSchema, corsHeaders);
     if ('error' in validation) {
       logStep('Validation failed');
       return validation.error;
     }
 
-    const { messages, scenarioId, userLevel, userLanguage, adaptiveLevel, includeInstantFeedback, uiLanguage } = validation.data;
-    logStep("Request validated", { userId, scenarioId, userLevel, userLanguage, adaptiveLevel, uiLanguage, messageCount: messages?.length });
+    const { messages, scenarioId, userLevel, userLanguage, adaptiveLevel, includeInstantFeedback, uiLanguage, isDemoMode } = validation.data;
 
-    // Server-side credit check and deduction
-    const creditResult = await checkAndDeductCredits(userId, false, corsHeaders);
-    if ('error' in creditResult) {
-      return creditResult.error;
+    let userId = 'demo-user';
+
+    if (isDemoMode) {
+      // Demo mode: skip auth and credits, limit messages
+      if (messages.length > 12) {
+        return new Response(JSON.stringify({ error: 'Demo message limit exceeded' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      logStep("Demo mode request", { scenarioId, messageCount: messages?.length });
+    } else {
+      // Authenticate user
+      const authResult = await authenticateUser(req);
+      if (authResult instanceof Response) {
+        return authResult;
+      }
+      userId = authResult.userId;
+
+      logStep("Request validated", { userId, scenarioId, userLevel, userLanguage, adaptiveLevel, uiLanguage, messageCount: messages?.length });
+
+      // Server-side credit check and deduction
+      const creditResult = await checkAndDeductCredits(userId, false, corsHeaders);
+      if ('error' in creditResult) {
+        return creditResult.error;
+      }
+      logStep("Credits validated", { isPaidPlan: creditResult.result.isPaidPlan, remaining: creditResult.result.remainingCredits });
     }
-    logStep("Credits validated", { isPaidPlan: creditResult.result.isPaidPlan, remaining: creditResult.result.remainingCredits });
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
