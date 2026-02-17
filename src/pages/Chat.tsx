@@ -96,6 +96,9 @@ const Chat: React.FC = () => {
   const [authUserId, setAuthUserId] = useState<string | undefined>(undefined);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
+  // Track which messages have already been auto-played (prevents re-playing)
+  const autoPlayedMessagesRef = useRef<Set<string>>(new Set());
+  
   // Get authenticated user ID first
   useEffect(() => {
     const getUser = async () => {
@@ -193,7 +196,6 @@ const Chat: React.FC = () => {
 
   // Track spoken messages to prevent re-speaking
   const hasSpokenInitialRef = useRef(false);
-  const lastSpokenMessageIdRef = useRef<string | null>(null);
   const initialMessageSetRef = useRef(false);
   
   // Initialize chat with first AI message
@@ -218,7 +220,7 @@ const Chat: React.FC = () => {
     // Speak initial message ONLY if voice is enabled and we haven't spoken yet
     if (voiceEnabled === true && !hasSpokenInitialRef.current) {
       hasSpokenInitialRef.current = true;
-      lastSpokenMessageIdRef.current = '1';
+      autoPlayedMessagesRef.current.add('1');
       // Delay to ensure component is mounted
       setTimeout(() => {
         speakMessage(initialContent, '1');
@@ -327,6 +329,9 @@ const Chat: React.FC = () => {
   };
 
   const sendMessage = async (text: string) => {
+    // Prevent parallel sends
+    if (isTyping) return;
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
@@ -338,7 +343,14 @@ const Chat: React.FC = () => {
     setIsTyping(true);
 
     try {
-      const chatMessages = [...messages, userMessage].map(m => ({
+      // IMPORTANT: Send only limited context to API, never the full raw history
+      // Send system-relevant context: last 6 messages (3 turns) + current user message
+      const allMessages = [...messages, userMessage];
+      const contextMessages = allMessages.length > 7
+        ? [allMessages[0], ...allMessages.slice(-6)] // keep initial AI message + last 6
+        : allMessages;
+      
+      const chatMessages = contextMessages.map(m => ({
         role: m.role,
         content: m.content,
       }));
@@ -451,11 +463,14 @@ const Chat: React.FC = () => {
         }));
       }
 
-      // Speak ONLY this new assistant response (if voice enabled)
-      // CRITICAL: Stop any previous audio and speak ONLY the new response
-      if (mainResponse && voiceEnabled === true && lastSpokenMessageIdRef.current !== assistantMessageId) {
-        lastSpokenMessageIdRef.current = assistantMessageId;
-        speakMessage(mainResponse, assistantMessageId);
+      // Autoplay ONLY this new message, ONLY if not already played, ONLY if voice enabled
+      if (mainResponse && voiceEnabled === true && !autoPlayedMessagesRef.current.has(assistantMessageId)) {
+        autoPlayedMessagesRef.current.add(assistantMessageId);
+        // Stop any previous audio before playing new one
+        stopTTS();
+        setTimeout(() => {
+          speakMessage(mainResponse, assistantMessageId);
+        }, 100);
       }
 
       // Auto-save conversation after each message exchange
