@@ -76,13 +76,6 @@ serve(async (req) => {
   }
 
   try {
-    // Authenticate user
-    const authResult = await authenticateUser(req);
-    if (authResult instanceof Response) {
-      return authResult;
-    }
-    const { userId } = authResult;
-
     // Validate request body
     const validation = await validateRequest(req, STTRequestSchema, corsHeaders);
     if ('error' in validation) {
@@ -90,15 +83,27 @@ serve(async (req) => {
       return validation.error;
     }
 
-    const { audio, mimeType, language } = validation.data;
-    logStep("Request validated", { userId, audioLength: audio.length, mimeType, language });
+    const { audio, mimeType, language, isDemoMode } = validation.data;
 
-    // Server-side credit check and deduction (audio request = true)
-    const creditResult = await checkAndDeductCredits(userId, true, corsHeaders);
-    if ('error' in creditResult) {
-      return creditResult.error;
+    let userId = 'demo-user';
+    if (isDemoMode) {
+      logStep('Demo mode - skipping auth and credits');
+    } else {
+      const authResult = await authenticateUser(req);
+      if (authResult instanceof Response) {
+        return authResult;
+      }
+      userId = authResult.userId;
+
+      // Server-side credit check and deduction (audio request = true)
+      const creditResult = await checkAndDeductCredits(userId, true, corsHeaders);
+      if ('error' in creditResult) {
+        return creditResult.error;
+      }
+      logStep("Credits validated", { isPaidPlan: creditResult.result.isPaidPlan, remainingAudio: creditResult.result.remainingAudioCredits });
     }
-    logStep("Credits validated", { isPaidPlan: creditResult.result.isPaidPlan, remainingAudio: creditResult.result.remainingAudioCredits });
+
+    logStep("Request validated", { userId, audioLength: audio.length, mimeType, language });
 
     const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
     

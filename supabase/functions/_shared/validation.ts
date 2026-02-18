@@ -33,6 +33,7 @@ export const AnalyzeRequestSchema = z.object({
   scenarioId: z.enum(VALID_SCENARIOS),
   userLevel: z.enum(VALID_LEVELS).optional(),
   userLanguage: z.enum(VALID_LANGUAGES).optional().default('english'),
+  isDemoMode: z.boolean().optional().default(false),
 });
 
 // Support chat request validation
@@ -49,6 +50,7 @@ export const SupportChatRequestSchema = z.object({
 export const TTSRequestSchema = z.object({
   text: z.string().min(1).max(5000), // Max 5000 chars
   language: z.enum(VALID_LANGUAGES).optional().default('english'),
+  isDemoMode: z.boolean().optional().default(false),
 });
 
 // Speech-to-text request validation
@@ -59,6 +61,7 @@ export const STTRequestSchema = z.object({
     { message: 'Invalid audio MIME type' }
   ).optional().default('audio/webm'),
   language: z.enum(VALID_LANGUAGES).optional().default('english'),
+  isDemoMode: z.boolean().optional().default(false),
 });
 
 // Helper function to create validation error response

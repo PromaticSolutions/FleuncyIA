@@ -63,13 +63,6 @@ serve(async (req) => {
   }
 
   try {
-    // Authenticate user
-    const authResult = await authenticateUser(req);
-    if (authResult instanceof Response) {
-      return authResult;
-    }
-    const { userId } = authResult;
-
     // Validate request body
     const validation = await validateRequest(req, TTSRequestSchema, corsHeaders);
     if ('error' in validation) {
@@ -77,7 +70,19 @@ serve(async (req) => {
       return validation.error;
     }
 
-    const { text, language } = validation.data;
+    const { text, language, isDemoMode } = validation.data;
+
+    let userId = 'demo-user';
+    if (isDemoMode) {
+      logStep('Demo mode - skipping auth');
+    } else {
+      const authResult = await authenticateUser(req);
+      if (authResult instanceof Response) {
+        return authResult;
+      }
+      userId = authResult.userId;
+    }
+
     logStep("Request validated", { userId, textLength: text.length, language });
 
     // NOTE: Credits are NOT deducted here - TTS is a response feature.

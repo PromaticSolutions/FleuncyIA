@@ -60,13 +60,6 @@ serve(async (req) => {
   }
 
   try {
-    // Authenticate user
-    const authResult = await authenticateUser(req);
-    if (authResult instanceof Response) {
-      return authResult;
-    }
-    const { userId } = authResult;
-
     // Validate request body
     const validation = await validateRequest(req, AnalyzeRequestSchema, corsHeaders);
     if ('error' in validation) {
@@ -74,15 +67,27 @@ serve(async (req) => {
       return validation.error;
     }
 
-    const { messages, scenarioId, userLevel, userLanguage } = validation.data;
-    logStep("Request validated", { userId, scenarioId, userLevel, userLanguage, messageCount: messages?.length });
+    const { messages, scenarioId, userLevel, userLanguage, isDemoMode } = validation.data;
 
-    // Server-side credit check and deduction
-    const creditResult = await checkAndDeductCredits(userId, false, corsHeaders);
-    if ('error' in creditResult) {
-      return creditResult.error;
+    let userId = 'demo-user';
+    if (isDemoMode) {
+      logStep('Demo mode - skipping auth and credits');
+    } else {
+      const authResult = await authenticateUser(req);
+      if (authResult instanceof Response) {
+        return authResult;
+      }
+      userId = authResult.userId;
+
+      // Server-side credit check and deduction
+      const creditResult = await checkAndDeductCredits(userId, false, corsHeaders);
+      if ('error' in creditResult) {
+        return creditResult.error;
+      }
+      logStep("Credits validated", { isPaidPlan: creditResult.result.isPaidPlan, remaining: creditResult.result.remainingCredits });
     }
-    logStep("Credits validated", { isPaidPlan: creditResult.result.isPaidPlan, remaining: creditResult.result.remainingCredits });
+
+    logStep("Request validated", { userId, scenarioId, userLevel, userLanguage, messageCount: messages?.length });
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
