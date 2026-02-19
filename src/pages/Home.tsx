@@ -8,12 +8,15 @@ import { Scenario } from '@/types';
 import { AppLayout } from '@/components/AppLayout';
 import { useCredits } from '@/hooks/useCredits';
 import { CreditsDisplay } from '@/components/CreditsDisplay';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { PushNotificationModal } from '@/components/PushNotificationModal';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user, isAuthenticated, hasCompletedOnboarding, isLoading, authUserId } = useApp();
   const { credits, hasUnlimitedCredits } = useCredits(authUserId || undefined, user?.plan);
+  const { shouldShowModal, subscribe, dismiss: dismissPushModal } = usePushNotifications(authUserId || undefined);
 
   useEffect(() => {
     if (!isLoading) {
@@ -184,6 +187,13 @@ const Home: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Push Notification Permission Modal */}
+      <PushNotificationModal
+        open={shouldShowModal}
+        onActivate={async () => { await subscribe(); }}
+        onDismiss={dismissPushModal}
+      />
     </AppLayout>
   );
 };
