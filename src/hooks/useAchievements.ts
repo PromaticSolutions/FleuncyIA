@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { achievements, Achievement } from '@/data/achievements';
 import { useToast } from '@/hooks/use-toast';
+import { sendPushNotification } from '@/lib/pushNotifications';
 
 interface UserAchievement {
   id: string;
@@ -83,6 +84,19 @@ export const useAchievements = (userId: string | undefined) => {
           title: '🏆 Nova Conquista!',
           description: `${achievement.icon} ${achievement.name}`,
         });
+
+        // Send push notification for achievement
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          sendPushNotification({
+            userId,
+            title: '🏆 Nova Conquista Desbloqueada!',
+            body: `${achievement.icon} ${achievement.name}`,
+            url: '/achievements',
+            tag: 'achievement',
+            accessToken: session.access_token,
+          });
+        }
       }
 
       await fetchAchievements();
