@@ -16,7 +16,8 @@ import {
   Sun,
   CreditCard,
   Loader2,
-  Languages
+  Languages,
+  Send
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -35,6 +36,7 @@ const Settings: React.FC = () => {
   const [notifications, setNotifications] = useState(true);
   const [sounds, setSounds] = useState(true);
   const [loadingPortal, setLoadingPortal] = useState(false);
+  const [loadingPush, setLoadingPush] = useState(false);
   const [uiLanguage, setUILanguage] = useState<'pt-BR' | 'en'>(getCurrentUILanguage());
 
   const saveSettings = useCallback(async (field: string, value: boolean | string) => {
@@ -126,6 +128,46 @@ const Settings: React.FC = () => {
       });
     } finally {
       setLoadingPortal(false);
+    }
+  };
+
+  const handleTestPush = async () => {
+    setLoadingPush(true);
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      if (!token) throw new Error('No session');
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-push-notification`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            title: '🎯 Fluency IA - Teste',
+            body: 'As notificações push estão funcionando! 🚀',
+            url: '/home',
+            tag: 'fluency-test',
+          }),
+        }
+      );
+      const data = await res.json();
+      toast({
+        title: 'Push enviado!',
+        description: `Enviado para ${data.sent || 0} de ${data.total || 0} dispositivos.`,
+      });
+    } catch (error) {
+      console.error('Error sending test push:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível enviar a notificação de teste.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingPush(false);
     }
   };
 
@@ -265,6 +307,25 @@ const Settings: React.FC = () => {
                 label={t('settings.preferences.aiVoice')}
                 value={t('settings.preferences.femaleUS')}
               />
+
+              {/* Test Push Notification */}
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="text-muted-foreground"><Send className="w-5 h-5" /></div>
+                  <div className="flex-1">
+                    <p className="font-medium text-foreground">Testar notificação push</p>
+                    <p className="text-sm text-muted-foreground">Envia para todos os dispositivos inscritos</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleTestPush}
+                    disabled={loadingPush}
+                  >
+                    {loadingPush ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Enviar'}
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
 
