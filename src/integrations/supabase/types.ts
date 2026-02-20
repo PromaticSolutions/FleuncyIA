@@ -523,6 +523,7 @@ export type Database = {
       get_all_user_rankings: {
         Args: never
         Returns: {
+          avatar_url: string
           average_score: number
           current_adaptive_level: string
           current_streak: number
