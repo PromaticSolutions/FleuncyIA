@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '@/contexts/AppContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,20 +12,25 @@ import {
   X,
   Mail,
   Flame,
-  Loader2
+  Loader2,
+  Camera
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AppLayout } from '@/components/AppLayout';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 const Profile: React.FC = () => {
   const { t } = useTranslation();
   const { user, conversations, authUserId, updateUserProfile, isLoading: isAppLoading } = useApp();
+  const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [editedName, setEditedName] = useState(user?.name || '');
   const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [profileStats, setProfileStats] = useState<{
     currentStreak: number;
     longestStreak: number;
@@ -100,6 +105,48 @@ const Profile: React.FC = () => {
     setIsEditing(false);
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !authUserId) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({ title: t('common.error'), description: 'Selecione uma imagem válida.', variant: 'destructive' });
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: t('common.error'), description: 'A imagem deve ter no máximo 2MB.', variant: 'destructive' });
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${authUserId}/avatar.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      const avatarUrl = `${publicUrl}?t=${Date.now()}`;
+      await updateUserProfile({ avatar: avatarUrl });
+
+      toast({ title: t('common.success'), description: 'Foto atualizada!' });
+    } catch (err) {
+      console.error('Error uploading avatar:', err);
+      toast({ title: t('common.error'), description: 'Não foi possível enviar a foto.', variant: 'destructive' });
+    } finally {
+      setIsUploadingAvatar(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   if (isAppLoading) {
     return (
       <AppLayout>
@@ -137,8 +184,32 @@ const Profile: React.FC = () => {
           <div className="bg-card rounded-xl border border-border p-6">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-4">
-                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-4xl">
-                  {user?.avatar || '👤'}
+                <div className="relative group">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarUpload}
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploadingAvatar}
+                    className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-4xl overflow-hidden relative"
+                  >
+                    {user?.avatar && user.avatar.startsWith('http') ? (
+                      <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <span>{user?.avatar || '👤'}</span>
+                    )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
+                      {isUploadingAvatar ? (
+                        <Loader2 className="w-6 h-6 text-white animate-spin" />
+                      ) : (
+                        <Camera className="w-6 h-6 text-white" />
+                      )}
+                    </div>
+                  </button>
                 </div>
                 <div>
                   {isEditing ? (
