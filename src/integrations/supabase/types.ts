@@ -479,6 +479,7 @@ export type Database = {
     Views: {
       user_rankings: {
         Row: {
+          avatar_url: string | null
           average_score: number | null
           current_adaptive_level: string | null
           current_streak: number | null
@@ -486,6 +487,26 @@ export type Database = {
           name: string | null
           total_conversations: number | null
           user_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          average_score?: number | null
+          current_adaptive_level?: string | null
+          current_streak?: number | null
+          longest_streak?: number | null
+          name?: string | null
+          total_conversations?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          average_score?: number | null
+          current_adaptive_level?: string | null
+          current_streak?: number | null
+          longest_streak?: number | null
+          name?: string | null
+          total_conversations?: number | null
+          user_id?: string | null
         }
         Relationships: []
       }

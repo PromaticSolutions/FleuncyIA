@@ -96,14 +96,13 @@ const Leaderboard: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('user_rankings')
-        .select('user_id, name, total_conversations, current_streak, longest_streak, current_adaptive_level')
+        .select('user_id, name, avatar_url, total_conversations, current_streak, longest_streak, current_adaptive_level')
         .order('total_conversations', { ascending: false })
         .limit(50);
 
       if (error) throw error;
       
-      // Map results to include avatar_url as null since view doesn't include it
-      setGlobalRanking((data || []).map(u => ({ ...u, avatar_url: null })));
+      setGlobalRanking((data || []).map(u => ({ ...u, avatar_url: u.avatar_url || null })));
     } catch (error) {
       console.error('Error fetching global ranking:', error);
     } finally {
@@ -142,13 +141,13 @@ const Leaderboard: React.FC = () => {
       // Fetch profiles for friends and current user from secure view
       const { data: profiles, error: profilesError } = await supabase
         .from('user_rankings')
-        .select('user_id, name, total_conversations, current_streak, longest_streak, current_adaptive_level')
+        .select('user_id, name, avatar_url, total_conversations, current_streak, longest_streak, current_adaptive_level')
         .in('user_id', allIds)
         .order('total_conversations', { ascending: false });
 
       if (profilesError) throw profilesError;
 
-      setFriendsRanking((profiles || []).map(p => ({ ...p, avatar_url: null })));
+      setFriendsRanking((profiles || []).map(p => ({ ...p, avatar_url: p.avatar_url || null })));
     } catch (error) {
       console.error('Error fetching friends ranking:', error);
     } finally {
