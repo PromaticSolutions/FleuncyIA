@@ -453,8 +453,9 @@ const Leaderboard: React.FC = () => {
 
           {/* Global Ranking */}
           <TabsContent value="global" className="space-y-4">
-            <div className="bg-card rounded-xl border border-border overflow-hidden">
-              <div className="p-3 sm:p-4 border-b border-border bg-muted/50 flex items-center justify-between">
+            <div className="bg-card rounded-xl border border-border overflow-hidden flex flex-col">
+              {/* Sticky header */}
+              <div className="p-3 sm:p-4 border-b border-border bg-muted/50 flex items-center justify-between sticky top-0 z-10">
                 <h3 className="font-semibold flex items-center gap-2 text-sm sm:text-base">
                   <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                   <span className="hidden xs:inline">{t('leaderboard.global.title')}</span>
@@ -471,7 +472,8 @@ const Leaderboard: React.FC = () => {
                   <RefreshCw className={`w-4 h-4 ${isLoadingGlobal ? 'animate-spin' : ''}`} />
                 </Button>
               </div>
-              <div className="divide-y divide-border">
+              {/* Scrollable ranking list */}
+              <div className="divide-y divide-border overflow-y-auto max-h-[60vh] sm:max-h-[65vh]">
                 {isLoadingGlobal ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <RankingRowSkeleton key={i} />
@@ -528,8 +530,8 @@ const Leaderboard: React.FC = () => {
             </div>
 
             {/* Friends Leaderboard */}
-            <div className="bg-card rounded-xl border border-border overflow-hidden">
-              <div className="p-3 sm:p-4 border-b border-border bg-muted/50 flex items-center justify-between">
+            <div className="bg-card rounded-xl border border-border overflow-hidden flex flex-col">
+              <div className="p-3 sm:p-4 border-b border-border bg-muted/50 flex items-center justify-between sticky top-0 z-10">
                 <h3 className="font-semibold flex items-center gap-2 text-sm sm:text-base">
                   <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                   {t('leaderboard.friends.title')}
@@ -544,7 +546,7 @@ const Leaderboard: React.FC = () => {
                   <RefreshCw className={`w-4 h-4 ${isLoadingFriends ? 'animate-spin' : ''}`} />
                 </Button>
               </div>
-              <div className="divide-y divide-border">
+              <div className="divide-y divide-border overflow-y-auto max-h-[60vh] sm:max-h-[65vh]">
                 {isLoadingFriends ? (
                   Array.from({ length: 3 }).map((_, i) => (
                     <RankingRowSkeleton key={i} />
@@ -731,7 +733,7 @@ const RankingRow: React.FC<{
   getRankIcon: (position: number) => React.ReactNode;
   t: (key: string) => string;
 }> = ({ player, position, isCurrentUser, getRankIcon, t }) => (
-  <div className={`flex items-center gap-2 sm:gap-4 p-3 sm:p-4 ${isCurrentUser ? 'bg-primary/5 border-l-2 border-l-primary' : 'hover:bg-muted/50'} transition-colors`}>
+  <div className={`flex items-center gap-2 sm:gap-4 p-3 sm:p-4 transition-colors ${isCurrentUser ? 'bg-primary/10 border-l-3 border-l-primary ring-1 ring-inset ring-primary/20' : 'hover:bg-muted/50'}`}>
     <div className="w-6 sm:w-8 flex justify-center flex-shrink-0">
       {getRankIcon(position)}
     </div>
