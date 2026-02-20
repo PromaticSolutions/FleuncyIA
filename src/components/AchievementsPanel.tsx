@@ -81,7 +81,7 @@ export const AchievementsPanel: React.FC<AchievementsPanelProps> = ({ userId }) 
         </TabsList>
 
         <TabsContent value={activeCategory} className="mt-4">
-          <div className="grid gap-3">
+          <div className="grid gap-3 overflow-y-auto max-h-[55vh] sm:max-h-[60vh] pr-1">
             {sortedAchievements.map(achievement => (
               <AchievementCard 
                 key={achievement.id} 

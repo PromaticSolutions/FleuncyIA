@@ -219,10 +219,10 @@ export const achievements: Achievement[] = [
 ];
 
 export const tierColors: Record<Achievement['tier'], { bg: string; border: string; text: string }> = {
-  bronze: { bg: 'bg-amber-100 dark:bg-amber-900/30', border: 'border-amber-400', text: 'text-amber-700 dark:text-amber-300' },
-  silver: { bg: 'bg-slate-100 dark:bg-slate-800/50', border: 'border-slate-400', text: 'text-slate-700 dark:text-slate-300' },
-  gold: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', border: 'border-yellow-500', text: 'text-yellow-700 dark:text-yellow-300' },
-  platinum: { bg: 'bg-purple-100 dark:bg-purple-900/30', border: 'border-purple-500', text: 'text-purple-700 dark:text-purple-300' },
+  bronze: { bg: 'bg-orange-50 dark:bg-orange-950/30', border: 'border-orange-300 dark:border-orange-700', text: 'text-orange-600 dark:text-orange-400' },
+  silver: { bg: 'bg-slate-50 dark:bg-slate-800/40', border: 'border-slate-300 dark:border-slate-600', text: 'text-slate-600 dark:text-slate-300' },
+  gold: { bg: 'bg-amber-50 dark:bg-amber-950/25', border: 'border-amber-300 dark:border-amber-700', text: 'text-amber-600 dark:text-amber-400' },
+  platinum: { bg: 'bg-violet-50 dark:bg-violet-950/30', border: 'border-violet-300 dark:border-violet-700', text: 'text-violet-600 dark:text-violet-400' },
 };
 
 export const categoryNames: Record<Achievement['category'], string> = {

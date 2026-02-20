@@ -82,8 +82,12 @@ export function AppSidebar() {
         {!isCollapsed && user && (
           <div className="mx-2 mb-4 p-3 bg-muted/50 rounded-xl">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-lg">
-                {user.avatar || '👤'}
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-lg overflow-hidden">
+                {user.avatar && user.avatar.startsWith('http') ? (
+                  <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <span>{user.avatar || '👤'}</span>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm text-foreground truncate">{user.name}</p>
