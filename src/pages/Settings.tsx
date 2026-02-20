@@ -278,12 +278,14 @@ const Settings: React.FC = () => {
                 label={t('settings.privacy.privacyPolicy')}
                 value=""
                 showArrow
+                onClick={() => navigate('/privacy')}
               />
               <SettingItem
                 icon={<Shield className="w-5 h-5" />}
                 label={t('settings.privacy.termsOfUse')}
                 value=""
                 showArrow
+                onClick={() => navigate('/terms')}
               />
             </div>
           </div>
@@ -315,8 +317,9 @@ const SettingItem: React.FC<{
   label: string;
   value: string;
   showArrow?: boolean;
-}> = ({ icon, label, value, showArrow }) => (
-  <button className="w-full flex items-center gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
+  onClick?: () => void;
+}> = ({ icon, label, value, showArrow, onClick }) => (
+  <button onClick={onClick} className="w-full flex items-center gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
     <div className="text-muted-foreground">{icon}</div>
     <div className="flex-1 text-left">
       <p className="font-medium text-foreground">{label}</p>
