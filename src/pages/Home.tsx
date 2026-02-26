@@ -1,19 +1,21 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '@/contexts/AppContext';
 import { scenarios, isScenarioLocked } from '@/data/scenarios';
-import { Lock, TrendingUp, Target, BookOpen, Trophy, Users, ChevronRight } from 'lucide-react';
+import { Lock, TrendingUp, Target, BookOpen, Trophy, Users, ChevronRight, Phone } from 'lucide-react';
 import { Scenario } from '@/types';
 import { AppLayout } from '@/components/AppLayout';
 import { useCredits } from '@/hooks/useCredits';
 import { CreditsDisplay } from '@/components/CreditsDisplay';
+import { VoiceCallScenarioModal } from '@/components/VoiceCallScenarioModal';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user, isAuthenticated, hasCompletedOnboarding, isLoading, authUserId } = useApp();
   const { credits, hasUnlimitedCredits } = useCredits(authUserId || undefined, user?.plan);
+  const [voiceModalOpen, setVoiceModalOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading) {
@@ -108,7 +110,7 @@ const Home: React.FC = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <button
             onClick={() => navigate('/achievements')}
             className="flex items-center gap-4 p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-xl hover:from-amber-500/20 hover:to-orange-500/20 transition-colors"
@@ -136,7 +138,24 @@ const Home: React.FC = () => {
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
           </button>
+
+          {/* Voice Call Card */}
+          <button
+            onClick={() => setVoiceModalOpen(true)}
+            className="flex items-center gap-4 p-4 bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-500/20 rounded-xl hover:from-violet-500/20 hover:to-purple-500/20 transition-colors"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+              <Phone className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="font-semibold text-foreground">Chamada de Voz</p>
+              <p className="text-sm text-muted-foreground">Pratique como em uma conversa real</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </button>
         </div>
+
+        <VoiceCallScenarioModal open={voiceModalOpen} onClose={() => setVoiceModalOpen(false)} />
 
         {/* Scenarios Section */}
         <div>

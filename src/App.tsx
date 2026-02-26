@@ -28,6 +28,7 @@ import Achievements from "./pages/Achievements";
 import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
 import ChatDemo from "./pages/ChatDemo";
+import VoiceCall from "./pages/VoiceCall";
 
 // Dev/Admin Pages
 import DevLogin from "./pages/dev/DevLogin";
@@ -44,8 +45,9 @@ function AppRoutes() {
   const location = useLocation();
   // Hide on public pages, chat pages, and dev pages
   const isChatPage = location.pathname.startsWith('/chat/');
+  const isVoiceCallPage = location.pathname.startsWith('/voice-call/');
   const isDevPage = location.pathname.startsWith('/dev');
-  const showHelpButton = !noHelpButtonRoutes.includes(location.pathname) && !isChatPage && !isDevPage;
+  const showHelpButton = !noHelpButtonRoutes.includes(location.pathname) && !isChatPage && !isVoiceCallPage && !isDevPage;
 
   return (
     <>
@@ -70,6 +72,7 @@ function AppRoutes() {
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
           <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+          <Route path="/voice-call/:scenarioId" element={<ProtectedRoute><VoiceCall /></ProtectedRoute>} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfUse />} />
           
