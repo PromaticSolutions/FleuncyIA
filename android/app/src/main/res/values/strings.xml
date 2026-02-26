@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Fleuncy AI</string>
+    <string name="title_activity_main">Fleuncy AI</string>
+    <string name="package_name">com.fluencyai.app</string>
+    <string name="custom_url_scheme">com.fluencyai.app</string>
+</resources>
