@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
+import { useConversation } from '@elevenlabs/react';
 import { supabase } from '@/integrations/supabase/client';
 
 export type CallStatus = 'idle' | 'connecting' | 'active' | 'ai-speaking' | 'user-speaking' | 'ended' | 'error';
@@ -16,7 +17,6 @@ interface UseRealtimeCallReturn {
   errorMessage: string | null;
   startCall: (scenarioId: string) => Promise<void>;
   endCall: () => void;
-  audioRef: React.RefObject<HTMLAudioElement>;
 }
 
 export function useRealtimeCall(): UseRealtimeCallReturn {
@@ -24,38 +24,58 @@ export function useRealtimeCall(): UseRealtimeCallReturn {
   const [transcript, setTranscript] = useState<TranscriptLine[]>([]);
   const [duration, setDuration] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
-  const dataChannelRef = useRef<RTCDataChannel | null>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const localStreamRef = useRef<MediaStream | null>(null);
 
-  const cleanup = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach(t => t.stop());
-      localStreamRef.current = null;
-    }
-    if (dataChannelRef.current) {
-      dataChannelRef.current.close();
-      dataChannelRef.current = null;
-    }
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.close();
-      peerConnectionRef.current = null;
-    }
-    if (audioRef.current) {
-      audioRef.current.srcObject = null;
-    }
-  }, []);
+  const conversation = useConversation({
+    onConnect: () => {
+      setStatus('active');
+      timerRef.current = setInterval(() => {
+        setDuration(prev => prev + 1);
+      }, 1000);
+    },
+    onDisconnect: () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      setStatus(prev => prev === 'error' ? 'error' : 'ended');
+    },
+    onMessage: (message) => {
+      const msg = message as unknown as Record<string, unknown>;
+      const type = msg?.type as string | undefined;
+      if (type === 'user_transcript') {
+        const event = msg?.user_transcription_event as { user_transcript?: string } | undefined;
+        const text = event?.user_transcript;
+        if (text) {
+          setTranscript(prev => [...prev, { role: 'user', text, timestamp: Date.now() }]);
+        }
+      }
+      if (type === 'agent_response') {
+        const event = msg?.agent_response_event as { agent_response?: string } | undefined;
+        const text = event?.agent_response;
+        if (text) {
+          setTranscript(prev => [...prev, { role: 'assistant', text, timestamp: Date.now() }]);
+        }
+      }
+    },
+    onError: (error) => {
+      console.error('[ElevenLabs] Error:', error);
+      setErrorMessage('Erro na conexão de voz. Verifique o microfone e tente novamente.');
+      setStatus('error');
+      if (timerRef.current) clearInterval(timerRef.current);
+    },
+  });
 
-  useEffect(() => {
-    return () => cleanup();
-  }, [cleanup]);
+  // Mirror isSpeaking state
+  const isSpeaking = conversation.isSpeaking;
+  const connStatus = conversation.status;
+
+  // Sync ElevenLabs speaking state
+  if (connStatus === 'connected') {
+    if (isSpeaking && status === 'active') {
+      // Will update next render cycle
+    }
+  }
 
   const startCall = useCallback(async (scenarioId: string) => {
     try {
@@ -64,18 +84,18 @@ export function useRealtimeCall(): UseRealtimeCallReturn {
       setTranscript([]);
       setDuration(0);
 
-      // Get JWT token
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error('Usuário não autenticado');
+      // Request microphone permission early
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch {
+        throw new Error('Acesso ao microfone negado. Por favor, permita o uso do microfone nas configurações do seu navegador.');
       }
 
-      // Request ephemeral token from edge function
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const baseUrl = supabaseUrl || `https://${projectId}.supabase.co`;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('Usuário não autenticado');
 
-      const tokenResponse = await fetch(`${baseUrl}/functions/v1/realtime-session`, {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/functions/v1/elevenlabs-conversation-token`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
@@ -85,136 +105,51 @@ export function useRealtimeCall(): UseRealtimeCallReturn {
         body: JSON.stringify({ scenarioId }),
       });
 
-      if (!tokenResponse.ok) {
-        const err = await tokenResponse.json();
+      if (!response.ok) {
+        const err = await response.json();
         throw new Error(err.error || 'Falha ao criar sessão de voz');
       }
 
-      const { client_secret } = await tokenResponse.json();
-      if (!client_secret?.value) {
-        throw new Error('Token de sessão inválido');
-      }
+      const { token } = await response.json();
+      if (!token) throw new Error('Token de sessão inválido');
 
-      // Create RTCPeerConnection
-      const pc = new RTCPeerConnection({
-        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+      await conversation.startSession({
+        conversationToken: token,
+        connectionType: 'webrtc',
       });
-      peerConnectionRef.current = pc;
-
-      // Set up audio output (AI voice)
-      pc.ontrack = (event) => {
-        if (audioRef.current && event.streams[0]) {
-          audioRef.current.srcObject = event.streams[0];
-        }
-      };
-
-      // Get microphone
-      let localStream: MediaStream;
-      try {
-        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      } catch {
-        throw new Error('Acesso ao microfone negado. Por favor, permita o uso do microfone.');
-      }
-      localStreamRef.current = localStream;
-      localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-
-      // Add audio receive track
-      pc.addTransceiver('audio', { direction: 'sendrecv' });
-
-      // Create data channel for events/transcriptions
-      const dc = pc.createDataChannel('oai-events');
-      dataChannelRef.current = dc;
-
-      dc.onmessage = (event) => {
-        try {
-          const msg = JSON.parse(event.data);
-
-          if (msg.type === 'response.audio_transcript.done') {
-            setTranscript(prev => [...prev, {
-              role: 'assistant',
-              text: msg.transcript,
-              timestamp: Date.now(),
-            }]);
-            setStatus('active');
-          }
-
-          if (msg.type === 'conversation.item.input_audio_transcription.completed') {
-            setTranscript(prev => [...prev, {
-              role: 'user',
-              text: msg.transcript,
-              timestamp: Date.now(),
-            }]);
-          }
-
-          if (msg.type === 'response.audio.delta') {
-            setStatus('ai-speaking');
-          }
-
-          if (msg.type === 'response.audio.done') {
-            setStatus('active');
-          }
-
-          if (msg.type === 'input_audio_buffer.speech_started') {
-            setStatus('user-speaking');
-          }
-
-          if (msg.type === 'input_audio_buffer.speech_stopped') {
-            setStatus('active');
-          }
-
-          if (msg.type === 'session.created') {
-            setStatus('active');
-            // Start duration timer
-            timerRef.current = setInterval(() => {
-              setDuration(prev => prev + 1);
-            }, 1000);
-          }
-        } catch {
-          // ignore parse errors
-        }
-      };
-
-      dc.onopen = () => {
-        console.log('[REALTIME] DataChannel open');
-      };
-
-      // Create SDP offer
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-
-      // Send offer to OpenAI WebRTC endpoint
-      const model = 'gpt-4o-realtime-preview-2024-12-17';
-      const sdpResponse = await fetch(
-        `https://api.openai.com/v1/realtime?model=${model}`,
-        {
-          method: 'POST',
-          body: offer.sdp,
-          headers: {
-            'Authorization': `Bearer ${client_secret.value}`,
-            'Content-Type': 'application/sdp',
-          },
-        }
-      );
-
-      if (!sdpResponse.ok) {
-        throw new Error('Falha ao estabelecer conexão de voz com a IA');
-      }
-
-      const answerSdp = await sdpResponse.text();
-      await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
 
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro inesperado ao iniciar chamada';
+      const message = err instanceof Error ? err.message : 'Erro ao iniciar chamada';
       setErrorMessage(message);
       setStatus('error');
-      cleanup();
     }
-  }, [cleanup]);
+  }, [conversation]);
 
-  const endCall = useCallback(() => {
-    cleanup();
+  const endCall = useCallback(async () => {
+    try {
+      await conversation.endSession();
+    } catch {
+      // ignore
+    }
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
     setStatus('ended');
-  }, [cleanup]);
+  }, [conversation]);
 
-  return { status, transcript, duration, errorMessage, startCall, endCall, audioRef };
+  // Derive display status from ElevenLabs state
+  let displayStatus: CallStatus = status;
+  if (connStatus === 'connected') {
+    displayStatus = isSpeaking ? 'ai-speaking' : 'active';
+  }
+
+  return {
+    status: displayStatus,
+    transcript,
+    duration,
+    errorMessage,
+    startCall,
+    endCall,
+  };
 }
