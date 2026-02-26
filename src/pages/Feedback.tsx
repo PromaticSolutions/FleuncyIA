@@ -21,20 +21,18 @@ const Feedback: React.FC = () => {
     feedback: ConversationFeedback; 
     scenarioId: string;
     userLanguage?: string;
+    fromVoiceCall?: boolean;
+    conversationId?: string;
   } | null;
 
   const feedback = state?.feedback;
   const scenarioId = state?.scenarioId || '';
   const userLanguage = state?.userLanguage;
+  const fromVoiceCall = state?.fromVoiceCall ?? false;
 
   const { checkAchievements, achievements } = useAchievements(authUserId || undefined);
   const { conversations } = useConversations(authUserId);
   const [newAchievements, setNewAchievements] = useState<string[]>([]);
-
-  if (!feedback) {
-    navigate('/home', { replace: true });
-    return null;
-  }
 
   const scenario = scenarios.find(s => s.id === scenarioId);
   const scenarioTitle = scenario?.titleKey ? t(scenario.titleKey) : scenario?.title || scenarioId;
@@ -42,16 +40,15 @@ const Feedback: React.FC = () => {
   // Check for new achievements after conversation
   useEffect(() => {
     const checkForNewAchievements = async () => {
-      if (!authUserId) return;
+      if (!authUserId || !feedback) return;
 
-      // Get user stats from database
+      // ... keep existing code (achievements logic)
       const { data: profile } = await supabase
         .from('user_profiles')
         .select('current_streak, longest_streak, total_conversations, current_adaptive_level')
         .eq('user_id', authUserId)
         .maybeSingle();
 
-      // Update stats in database
       const today = new Date().toISOString().split('T')[0];
       const { data: currentProfile } = await supabase
         .from('user_profiles')
@@ -64,7 +61,6 @@ const Feedback: React.FC = () => {
         const lastDate = new Date(currentProfile.last_practice_date);
         const todayDate = new Date(today);
         const diffDays = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
-        
         if (diffDays === 0) {
           newStreak = currentProfile.current_streak || 1;
         } else if (diffDays === 1) {
@@ -85,22 +81,18 @@ const Feedback: React.FC = () => {
         })
         .eq('user_id', authUserId);
 
-      // Get completed scenarios
       const completedScenarios = [...new Set(conversations.map(c => c.scenarioId))];
       if (!completedScenarios.includes(scenarioId)) {
         completedScenarios.push(scenarioId);
       }
 
-      // Get highest score
       const allScores = conversations
         .filter(c => c.feedback?.overallScore)
         .map(c => c.feedback!.overallScore);
       const highestScore = Math.max(feedback.overallScore, ...allScores, 0);
 
-      // Get unlocked achievements before checking
       const previouslyUnlocked = achievements.filter(a => a.unlocked).map(a => a.id);
 
-      // Check achievements
       await checkAchievements({
         totalConversations,
         currentStreak: newStreak,
@@ -110,7 +102,6 @@ const Feedback: React.FC = () => {
         currentLevel: profile?.current_adaptive_level || feedback.estimatedLevel || 'A1',
       });
 
-      // After a short delay, check for new achievements
       setTimeout(() => {
         const nowUnlocked = achievements.filter(a => a.unlocked).map(a => a.id);
         const newlyUnlocked = nowUnlocked.filter(id => !previouslyUnlocked.includes(id));
@@ -122,6 +113,11 @@ const Feedback: React.FC = () => {
 
     checkForNewAchievements();
   }, [authUserId, scenarioId, feedback, conversations]);
+
+  if (!feedback) {
+    navigate('/home', { replace: true });
+    return null;
+  }
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-success';
@@ -298,10 +294,10 @@ const Feedback: React.FC = () => {
           variant="outline" 
           size="lg" 
           className="w-full"
-          onClick={() => navigate(`/chat/${scenarioId}`)}
+          onClick={() => fromVoiceCall ? navigate(`/voice-call/${scenarioId}`) : navigate(`/chat/${scenarioId}`)}
         >
           <RotateCcw className="w-5 h-5 mr-2" />
-          {t('feedback.tryAgain')}
+          {fromVoiceCall ? 'Refazer chamada' : t('feedback.tryAgain')}
         </Button>
       </div>
     </div>
