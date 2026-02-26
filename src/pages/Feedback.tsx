@@ -17,14 +17,24 @@ const Feedback: React.FC = () => {
   const location = useLocation();
   const { t } = useTranslation();
   const { authUserId } = useApp();
-  const { feedback, scenarioId, userLanguage } = location.state as { 
+  const state = location.state as { 
     feedback: ConversationFeedback; 
     scenarioId: string;
     userLanguage?: string;
-  };
+  } | null;
+
+  const feedback = state?.feedback;
+  const scenarioId = state?.scenarioId || '';
+  const userLanguage = state?.userLanguage;
+
   const { checkAchievements, achievements } = useAchievements(authUserId || undefined);
   const { conversations } = useConversations(authUserId);
   const [newAchievements, setNewAchievements] = useState<string[]>([]);
+
+  if (!feedback) {
+    navigate('/home', { replace: true });
+    return null;
+  }
 
   const scenario = scenarios.find(s => s.id === scenarioId);
   const scenarioTitle = scenario?.titleKey ? t(scenario.titleKey) : scenario?.title || scenarioId;
