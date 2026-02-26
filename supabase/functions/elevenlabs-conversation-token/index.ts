@@ -133,7 +133,7 @@ Deno.serve(async (req: Request) => {
     const language = profile?.language || 'english';
     const level = profile?.level || 'intermediate';
     const agentId = Deno.env.get('ELEVENLABS_AGENT_ID');
-    const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY');
+    const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY_CONVAI') || Deno.env.get('ELEVENLABS_API_KEY');
 
     if (!agentId || !elevenLabsApiKey) {
       return new Response(JSON.stringify({ error: 'ElevenLabs not configured' }), {
