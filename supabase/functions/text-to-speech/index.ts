@@ -12,16 +12,16 @@ const logStep = (step: string, details?: unknown) => {
   console.log(`[TTS] ${step}${detailsStr}`);
 };
 
-// Map language to appropriate ElevenLabs voice
+// Map language to appropriate ElevenLabs voice (native speakers)
 function getVoiceForLanguage(language: string): string {
   const voiceMap: Record<string, string> = {
-    'english': 'JBFqnCBsd6RMkjVDRZzb', // George - British, warm
-    'spanish': 'onwK4e9ZLuTAKqWW03F9', // Daniel
-    'french': 'EXAVITQu4vr4xnSDxMaL', // Sarah
-    'german': 'N2lVS1w4EtoT3dr4eOWO', // Callum
-    'italian': 'XB0fDUnXU5powFXDhCwa', // Charlotte
+    'english': 'nPczCjzI2devNBz1zQrb', // Brian - British neutral, clear for learning
+    'spanish': 'onwK4e9ZLuTAKqWW03F9', // Daniel - Iberian Spanish native
+    'french':  'Rem0C1SHBzT8OMfNLDnK', // French native voice
+    'german':  'EkK5I93UQWFDigLMpZcX', // German native voice
+    'italian': 'zcAOhNBS3c14rBihAFp1', // Italian native voice
   };
-  return voiceMap[language?.toLowerCase()] || 'JBFqnCBsd6RMkjVDRZzb';
+  return voiceMap[language?.toLowerCase()] || 'nPczCjzI2devNBz1zQrb';
 }
 
 // Authentication helper using getClaims
@@ -112,11 +112,11 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         text,
-        model_id: 'eleven_multilingual_v2',
+        model_id: 'eleven_turbo_v2_5',
         voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.75,
-          style: 0.3,
+          stability: 0.6,
+          similarity_boost: 0.80,
+          style: 0.2,
           use_speaker_boost: true,
         },
       }),
