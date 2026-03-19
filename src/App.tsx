@@ -7,6 +7,10 @@ import { AppProvider } from "@/contexts/AppContext";
 import { HelpButton } from "@/components/HelpButton";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
+import { ExitIntentFeedbackModal } from "@/components/ExitIntentFeedbackModal";
+import { useExitIntent } from "@/hooks/useExitIntent";
+import { useAnalyticsTracking } from "@/hooks/useAnalyticsTracking";
+import { useState } from "react";
 
 // Pages
 import Index from "./pages/Index";
@@ -43,11 +47,24 @@ const noHelpButtonRoutes = ['/', '/landing', '/splash', '/auth', '/chat-demo', '
 
 function AppRoutes() {
   const location = useLocation();
+  const { trackEvent } = useAnalyticsTracking();
+  const [showExitIntent, setShowExitIntent] = useState(false);
+
   // Hide on public pages, chat pages, and dev pages
   const isChatPage = location.pathname.startsWith('/chat/');
   const isVoiceCallPage = location.pathname.startsWith('/voice-call/');
   const isDevPage = location.pathname.startsWith('/dev');
   const showHelpButton = !noHelpButtonRoutes.includes(location.pathname) && !isChatPage && !isVoiceCallPage && !isDevPage;
+
+  const handleExitIntent = () => {
+    setShowExitIntent(true);
+    trackEvent({ eventName: 'feature_used', category: 'engagement', metadata: { feature: 'exit_intent_popup_shown' } });
+  };
+
+  useExitIntent({
+    onExitIntent: handleExitIntent,
+    enabled: !isDevPage,
+  });
 
   return (
     <>
@@ -86,6 +103,17 @@ function AppRoutes() {
         </Routes>
       </main>
       {showHelpButton && <HelpButton />}
+      <ExitIntentFeedbackModal
+        open={showExitIntent}
+        onClose={() => setShowExitIntent(false)}
+        onTrackEvent={(event) => {
+          if (event === 'exit_intent_feedback_submitted') {
+            trackEvent({ eventName: 'feature_used', category: 'engagement', metadata: { feature: event } });
+          } else if (event === 'exit_intent_popup_closed') {
+            trackEvent({ eventName: 'feature_used', category: 'engagement', metadata: { feature: event } });
+          }
+        }}
+      />
     </>
   );
 }

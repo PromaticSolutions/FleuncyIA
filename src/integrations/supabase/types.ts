@@ -182,6 +182,51 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback_exit_intent: {
+        Row: {
+          created_at: string
+          device_type: string | null
+          email: string | null
+          feedback_message: string
+          id: string
+          nome: string | null
+          page_title: string | null
+          page_url: string | null
+          rating: number | null
+          session_id: string | null
+          submitted_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_type?: string | null
+          email?: string | null
+          feedback_message: string
+          id?: string
+          nome?: string | null
+          page_title?: string | null
+          page_url?: string | null
+          rating?: number | null
+          session_id?: string | null
+          submitted_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_type?: string | null
+          email?: string | null
+          feedback_message?: string
+          id?: string
+          nome?: string | null
+          page_title?: string | null
+          page_url?: string | null
+          rating?: number | null
+          session_id?: string | null
+          submitted_at?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       friendships: {
         Row: {
           created_at: string
