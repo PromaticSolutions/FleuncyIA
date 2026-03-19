@@ -24,7 +24,7 @@ export function useRealtimeCall(): UseRealtimeCallReturn {
   const [transcript, setTranscript] = useState<TranscriptLine[]>([]);
   const [duration, setDuration] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const conversation = useConversation({
     onConnect: () => {
