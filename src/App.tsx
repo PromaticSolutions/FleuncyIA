@@ -47,11 +47,24 @@ const noHelpButtonRoutes = ['/', '/landing', '/splash', '/auth', '/chat-demo', '
 
 function AppRoutes() {
   const location = useLocation();
+  const { trackEvent } = useAnalyticsTracking();
+  const [showExitIntent, setShowExitIntent] = useState(false);
+
   // Hide on public pages, chat pages, and dev pages
   const isChatPage = location.pathname.startsWith('/chat/');
   const isVoiceCallPage = location.pathname.startsWith('/voice-call/');
   const isDevPage = location.pathname.startsWith('/dev');
   const showHelpButton = !noHelpButtonRoutes.includes(location.pathname) && !isChatPage && !isVoiceCallPage && !isDevPage;
+
+  const handleExitIntent = () => {
+    setShowExitIntent(true);
+    trackEvent({ eventName: 'feature_used', category: 'engagement', metadata: { feature: 'exit_intent_popup_shown' } });
+  };
+
+  useExitIntent({
+    onExitIntent: handleExitIntent,
+    enabled: !isDevPage,
+  });
 
   return (
     <>
