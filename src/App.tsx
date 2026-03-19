@@ -103,6 +103,17 @@ function AppRoutes() {
         </Routes>
       </main>
       {showHelpButton && <HelpButton />}
+      <ExitIntentFeedbackModal
+        open={showExitIntent}
+        onClose={() => setShowExitIntent(false)}
+        onTrackEvent={(event) => {
+          if (event === 'exit_intent_feedback_submitted') {
+            trackEvent({ eventName: 'feature_used', category: 'engagement', metadata: { feature: event } });
+          } else if (event === 'exit_intent_popup_closed') {
+            trackEvent({ eventName: 'feature_used', category: 'engagement', metadata: { feature: event } });
+          }
+        }}
+      />
     </>
   );
 }
