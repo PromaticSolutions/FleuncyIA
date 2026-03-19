@@ -7,6 +7,10 @@ import { AppProvider } from "@/contexts/AppContext";
 import { HelpButton } from "@/components/HelpButton";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
+import { ExitIntentFeedbackModal } from "@/components/ExitIntentFeedbackModal";
+import { useExitIntent } from "@/hooks/useExitIntent";
+import { useAnalyticsTracking } from "@/hooks/useAnalyticsTracking";
+import { useState } from "react";
 
 // Pages
 import Index from "./pages/Index";
