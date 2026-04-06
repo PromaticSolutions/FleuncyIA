@@ -9,11 +9,12 @@ interface ExitIntentFeedbackModalProps {
   open: boolean;
   onClose: () => void;
   onTrackEvent?: (event: string) => void;
+  triggeredByNav?: boolean;
 }
 
 type SubmitState = 'idle' | 'submitting' | 'success' | 'error';
 
-export function ExitIntentFeedbackModal({ open, onClose, onTrackEvent }: ExitIntentFeedbackModalProps) {
+export function ExitIntentFeedbackModal({ open, onClose, onTrackEvent, triggeredByNav = false }: ExitIntentFeedbackModalProps) {
   const [rating, setRating] = useState<number>(0);
   const [hoveredRating, setHoveredRating] = useState<number>(0);
   const [nome, setNome] = useState('');
@@ -26,6 +27,9 @@ export function ExitIntentFeedbackModal({ open, onClose, onTrackEvent }: ExitInt
   const handleClose = () => {
     onTrackEvent?.('exit_intent_popup_closed');
     onClose();
+    if (triggeredByNav) {
+      window.history.back();
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,6 +53,9 @@ export function ExitIntentFeedbackModal({ open, onClose, onTrackEvent }: ExitInt
 
       setTimeout(() => {
         onClose();
+        if (triggeredByNav) {
+          window.history.back();
+        }
       }, 2500);
     } catch {
       setSubmitState('error');
