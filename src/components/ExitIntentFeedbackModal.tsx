@@ -9,6 +9,7 @@ interface ExitIntentFeedbackModalProps {
   open: boolean;
   onClose: () => void;
   onTrackEvent?: (event: string) => void;
+  triggeredByNav?: boolean;
 }
 
 type SubmitState = 'idle' | 'submitting' | 'success' | 'error';
