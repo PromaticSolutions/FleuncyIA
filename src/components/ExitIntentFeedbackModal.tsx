@@ -14,7 +14,7 @@ interface ExitIntentFeedbackModalProps {
 
 type SubmitState = 'idle' | 'submitting' | 'success' | 'error';
 
-export function ExitIntentFeedbackModal({ open, onClose, onTrackEvent }: ExitIntentFeedbackModalProps) {
+export function ExitIntentFeedbackModal({ open, onClose, onTrackEvent, triggeredByNav = false }: ExitIntentFeedbackModalProps) {
   const [rating, setRating] = useState<number>(0);
   const [hoveredRating, setHoveredRating] = useState<number>(0);
   const [nome, setNome] = useState('');
