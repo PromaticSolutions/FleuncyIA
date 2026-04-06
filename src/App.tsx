@@ -105,7 +105,7 @@ function AppRoutes() {
       {showHelpButton && <HelpButton />}
       <ExitIntentFeedbackModal
         open={showExitIntent}
-        onClose={() => setShowExitIntent(false)}
+        onClose={() => { setShowExitIntent(false); resetTrigger(); }}
         triggeredByNav={wasTriggeredByNav()}
         onTrackEvent={(event) => {
           if (event === 'exit_intent_feedback_submitted') {
