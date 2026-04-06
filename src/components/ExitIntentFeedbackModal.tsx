@@ -53,6 +53,9 @@ export function ExitIntentFeedbackModal({ open, onClose, onTrackEvent, triggered
 
       setTimeout(() => {
         onClose();
+        if (triggeredByNav) {
+          window.history.back();
+        }
       }, 2500);
     } catch {
       setSubmitState('error');
