@@ -16,9 +16,6 @@ export function useExitIntent({ onExitIntent, enabled = true }: UseExitIntentOpt
   useEffect(() => {
     if (!enabled) return;
 
-    const isMobile = window.innerWidth < 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (isMobile) return;
-
     window.history.pushState({ exitIntentTrap: true }, '', window.location.href);
 
     const handlePopState = () => {
