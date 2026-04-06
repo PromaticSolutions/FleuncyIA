@@ -61,7 +61,7 @@ function AppRoutes() {
     trackEvent({ eventName: 'feature_used', category: 'engagement', metadata: { feature: 'exit_intent_popup_shown' } });
   };
 
-  const { wasTriggeredByNav } = useExitIntent({
+  const { wasTriggeredByNav, resetTrigger } = useExitIntent({
     onExitIntent: handleExitIntent,
     enabled: !isDevPage,
   });
@@ -105,7 +105,7 @@ function AppRoutes() {
       {showHelpButton && <HelpButton />}
       <ExitIntentFeedbackModal
         open={showExitIntent}
-        onClose={() => setShowExitIntent(false)}
+        onClose={() => { setShowExitIntent(false); resetTrigger(); }}
         triggeredByNav={wasTriggeredByNav()}
         onTrackEvent={(event) => {
           if (event === 'exit_intent_feedback_submitted') {
