@@ -27,6 +27,9 @@ export function ExitIntentFeedbackModal({ open, onClose, onTrackEvent, triggered
   const handleClose = () => {
     onTrackEvent?.('exit_intent_popup_closed');
     onClose();
+    if (triggeredByNav) {
+      window.history.back();
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
