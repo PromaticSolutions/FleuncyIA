@@ -448,6 +448,18 @@ const StatItem: React.FC<{ value: string; label: string }> = ({ value, label }) 
   </div>
 );
 
+const WhyCard: React.FC<{ icon: React.ReactNode; title: string; description: string }> = ({
+  icon, title, description
+}) => (
+  <div className="p-6 bg-card rounded-2xl border border-border text-center">
+    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary mx-auto mb-4">
+      {icon}
+    </div>
+    <h3 className="font-semibold text-foreground mb-2">{title}</h3>
+    <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
+  </div>
+);
+
 const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; description: string }> = ({ 
   icon, title, description 
 }) => (
