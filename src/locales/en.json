@@ -98,31 +98,31 @@
       }
     },
     "features": {
-      "title": "Features that boost your learning",
-      "subtitle": "Cutting-edge technology combined with proven methodology for real results",
+      "title": "What changes in your evolution",
+      "subtitle": "Every feature is designed to deliver measurable results — not just offer functionality",
       "contextualConversations": {
-        "title": "Contextual Conversations",
-        "description": "Practise in real scenarios like restaurants, airports, business meetings and more."
+        "title": "Practice in real scenarios",
+        "description": "Train in situations you'll actually face: restaurants, airports, meetings and interviews."
       },
       "detailedAnalytics": {
-        "title": "Detailed Analytics",
-        "description": "Track your progress with grammar, vocabulary, fluency and pronunciation metrics."
+        "title": "Clear view of your progress",
+        "description": "Grammar, vocabulary, fluency and pronunciation metrics show exactly where you're evolving."
       },
       "audioSupport": {
-        "title": "Audio Support",
-        "description": "Practise your pronunciation with speech recognition and detailed feedback."
+        "title": "Pronunciation that improves every session",
+        "description": "Voice recognition with specific feedback to continuously correct and refine your pronunciation."
       },
       "fiveLanguages": {
-        "title": "5 Languages",
-        "description": "English, Spanish, French, Italian and German available for practice."
+        "title": "5 languages to evolve in",
+        "description": "English, Spanish, French, Italian and German — with the same continuous evolution system."
       },
       "instantFeedback": {
-        "title": "Instant Feedback",
-        "description": "Receive corrections and suggestions in real time during your conversations."
+        "title": "Real-time corrections",
+        "description": "With every message you receive guidance to improve grammar, vocabulary and clarity on the spot."
       },
       "adaptiveLevels": {
-        "title": "Adaptive Levels",
-        "description": "The AI automatically adjusts difficulty according to your progress."
+        "title": "Difficulty that follows you",
+        "description": "The AI identifies your level and increases complexity as you evolve, keeping the challenge constant."
       }
     },
     "howItWorks": {
