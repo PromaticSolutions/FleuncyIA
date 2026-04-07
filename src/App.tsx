@@ -54,6 +54,7 @@ function AppRoutes() {
   const isChatPage = location.pathname.startsWith('/chat/');
   const isVoiceCallPage = location.pathname.startsWith('/voice-call/');
   const isDevPage = location.pathname.startsWith('/dev');
+  const isLandingPage = location.pathname === '/landing' || location.pathname === '/';
   const showHelpButton = !noHelpButtonRoutes.includes(location.pathname) && !isChatPage && !isVoiceCallPage && !isDevPage;
 
   const handleExitIntent = () => {
@@ -61,9 +62,10 @@ function AppRoutes() {
     trackEvent({ eventName: 'feature_used', category: 'engagement', metadata: { feature: 'exit_intent_popup_shown' } });
   };
 
-  const { wasTriggeredByNav, resetTrigger } = useExitIntent({
+  // Only enable exit intent on landing/index pages
+  const { resetTrigger, navigateBack } = useExitIntent({
     onExitIntent: handleExitIntent,
-    enabled: !isDevPage,
+    enabled: isLandingPage,
   });
 
   return (
@@ -106,13 +108,9 @@ function AppRoutes() {
       <ExitIntentFeedbackModal
         open={showExitIntent}
         onClose={() => { setShowExitIntent(false); resetTrigger(); }}
-        triggeredByNav={wasTriggeredByNav()}
+        onNavigateBack={navigateBack}
         onTrackEvent={(event) => {
-          if (event === 'exit_intent_feedback_submitted') {
-            trackEvent({ eventName: 'feature_used', category: 'engagement', metadata: { feature: event } });
-          } else if (event === 'exit_intent_popup_closed') {
-            trackEvent({ eventName: 'feature_used', category: 'engagement', metadata: { feature: event } });
-          }
+          trackEvent({ eventName: 'feature_used', category: 'engagement', metadata: { feature: event } });
         }}
       />
     </>
