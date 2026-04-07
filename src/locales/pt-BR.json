@@ -126,19 +126,19 @@
       }
     },
     "howItWorks": {
-      "title": "Como funciona",
-      "subtitle": "Comece a praticar em apenas 3 passos simples",
+      "title": "Um processo contínuo de evolução — não apenas prática",
+      "subtitle": "Cada sessão é um passo real na sua jornada de fluência",
       "step1": {
-        "title": "Escolha um cenário",
-        "description": "Selecione entre 8 cenários do mundo real, desde restaurantes até reuniões de negócios."
+        "title": "Pratique em cenários reais",
+        "description": "Escolha situações que você vai enfrentar no mundo real. Cada cenário foi desenhado para treinar habilidades específicas."
       },
       "step2": {
-        "title": "Converse com a IA",
-        "description": "Pratique conversas naturais com nossa IA avançada que simula situações reais."
+        "title": "Receba feedback inteligente",
+        "description": "Após cada conversa, a IA analisa gramática, vocabulário, clareza e fluência — com correções específicas e acionáveis."
       },
       "step3": {
-        "title": "Receba feedback",
-        "description": "Analise seu desempenho com métricas detalhadas e sugestões de melhoria."
+        "title": "Evolua ao longo do tempo",
+        "description": "Acompanhe seu progresso com métricas claras. A dificuldade aumenta conforme você melhora, garantindo evolução constante."
       }
     },
     "pricing": {
