@@ -52,9 +52,29 @@
       "languages": "Idiomas Disponíveis",
       "satisfaction": "Satisfação"
     },
+    "whyItWorks": {
+      "title": "Por que isso funciona",
+      "subtitle": "Um sistema projetado para evolução real — não apenas exposição ao idioma",
+      "continuousFeedback": {
+        "title": "Feedback contínuo",
+        "description": "Cada conversa gera uma análise detalhada do que você acertou e onde pode melhorar."
+      },
+      "detailedCorrections": {
+        "title": "Correções detalhadas",
+        "description": "Erros de gramática, vocabulário e clareza são identificados com sugestões específicas de melhoria."
+      },
+      "levelAdaptation": {
+        "title": "Adaptação ao seu nível",
+        "description": "A IA ajusta a complexidade das conversas conforme seu progresso, mantendo o desafio ideal."
+      },
+      "evolutionHistory": {
+        "title": "Histórico de evolução",
+        "description": "Acompanhe sua melhoria ao longo do tempo com métricas claras e comparáveis."
+      }
+    },
     "method": {
-      "title": "Como funciona nosso método de ensino",
-      "subtitle": "Aprendizado baseado em tarefas reais (Task-Based Language Teaching)",
+      "title": "Metodologia comprovada: Task-Based Language Teaching",
+      "subtitle": "A mesma abordagem usada nas melhores universidades do mundo — aplicada com inteligência artificial",
       "badge": "Aprendizado por Tarefas",
       "methodology": "Método TBLT",
       "footer": "Método amplamente adotado em universidades de referência e programas de ensino de idiomas.",
