@@ -126,19 +126,19 @@
       }
     },
     "howItWorks": {
-      "title": "How it works",
-      "subtitle": "Start practising in just 3 simple steps",
+      "title": "A continuous evolution process — not just practice",
+      "subtitle": "Every session is a real step in your fluency journey",
       "step1": {
-        "title": "Choose a scenario",
-        "description": "Select from 8 real-world scenarios, from restaurants to business meetings."
+        "title": "Practise in real scenarios",
+        "description": "Choose situations you'll face in the real world. Each scenario is designed to train specific skills."
       },
       "step2": {
-        "title": "Converse with the AI",
-        "description": "Practise natural conversations with our advanced AI that simulates real situations."
+        "title": "Receive smart feedback",
+        "description": "After every conversation the AI analyses grammar, vocabulary, clarity and fluency — with specific, actionable corrections."
       },
       "step3": {
-        "title": "Receive feedback",
-        "description": "Analyse your performance with detailed metrics and improvement suggestions."
+        "title": "Evolve over time",
+        "description": "Track your progress with clear metrics. Difficulty increases as you improve, ensuring constant evolution."
       }
     },
     "pricing": {
