@@ -98,31 +98,31 @@
       }
     },
     "features": {
-      "title": "Recursos que impulsionam seu aprendizado",
-      "subtitle": "Tecnologia de ponta combinada com metodologia comprovada para resultados reais",
+      "title": "O que muda na sua evolução",
+      "subtitle": "Cada recurso foi desenhado para gerar resultado mensurável — não apenas oferecer funcionalidades",
       "contextualConversations": {
-        "title": "Conversas Contextuais",
-        "description": "Pratique em cenários reais como restaurantes, aeroportos, reuniões de negócios e muito mais."
+        "title": "Prática em cenários reais",
+        "description": "Você treina em situações que vai enfrentar de verdade: restaurantes, aeroportos, reuniões e entrevistas."
       },
       "detailedAnalytics": {
-        "title": "Análises Detalhadas",
-        "description": "Acompanhe seu progresso com métricas de gramática, vocabulário, fluência e pronúncia."
+        "title": "Visão clara do seu progresso",
+        "description": "Métricas de gramática, vocabulário, fluência e pronúncia mostram exatamente onde você está evoluindo."
       },
       "audioSupport": {
-        "title": "Suporte a Áudio",
-        "description": "Pratique sua pronúncia com reconhecimento de voz e feedback detalhado."
+        "title": "Pronúncia que melhora a cada sessão",
+        "description": "Reconhecimento de voz com feedback específico para corrigir e refinar sua pronúncia continuamente."
       },
       "fiveLanguages": {
-        "title": "5 Idiomas",
-        "description": "Inglês, Espanhol, Francês, Italiano e Alemão disponíveis para prática."
+        "title": "5 idiomas para evoluir",
+        "description": "Inglês, Espanhol, Francês, Italiano e Alemão — com o mesmo sistema de evolução contínua."
       },
       "instantFeedback": {
-        "title": "Feedback Instantâneo",
-        "description": "Receba correções e sugestões em tempo real durante suas conversas."
+        "title": "Correções em tempo real",
+        "description": "A cada mensagem, você recebe orientações para melhorar gramática, vocabulário e clareza na hora."
       },
       "adaptiveLevels": {
-        "title": "Níveis Adaptativos",
-        "description": "A IA ajusta a dificuldade automaticamente conforme seu progresso."
+        "title": "Dificuldade que acompanha você",
+        "description": "A IA identifica seu nível e aumenta a complexidade conforme você evolui, mantendo o desafio constante."
       }
     },
     "howItWorks": {
