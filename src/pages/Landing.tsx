@@ -159,8 +159,43 @@ const Landing: React.FC = () => {
         </div>
       </section>
 
+      {/* Why It Works Section */}
+      <section className="py-20 px-6 bg-muted/30">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              {t('landing.whyItWorks.title')}
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              {t('landing.whyItWorks.subtitle')}
+            </p>
+          </div>
 
-      {/* TBLT Methodology Section */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <WhyCard
+              icon={<RefreshCw className="w-6 h-6" />}
+              title={t('landing.whyItWorks.continuousFeedback.title')}
+              description={t('landing.whyItWorks.continuousFeedback.description')}
+            />
+            <WhyCard
+              icon={<Target className="w-6 h-6" />}
+              title={t('landing.whyItWorks.detailedCorrections.title')}
+              description={t('landing.whyItWorks.detailedCorrections.description')}
+            />
+            <WhyCard
+              icon={<TrendingUp className="w-6 h-6" />}
+              title={t('landing.whyItWorks.levelAdaptation.title')}
+              description={t('landing.whyItWorks.levelAdaptation.description')}
+            />
+            <WhyCard
+              icon={<History className="w-6 h-6" />}
+              title={t('landing.whyItWorks.evolutionHistory.title')}
+              description={t('landing.whyItWorks.evolutionHistory.description')}
+            />
+          </div>
+        </div>
+      </section>
+
       <section className="py-20 px-6">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
