@@ -8,13 +8,13 @@ import { saveExitIntentFeedback } from '@/lib/exitIntentFeedback';
 interface ExitIntentFeedbackModalProps {
   open: boolean;
   onClose: () => void;
+  onNavigateBack?: () => void;
   onTrackEvent?: (event: string) => void;
-  triggeredByNav?: boolean;
 }
 
 type SubmitState = 'idle' | 'submitting' | 'success' | 'error';
 
-export function ExitIntentFeedbackModal({ open, onClose, onTrackEvent, triggeredByNav = false }: ExitIntentFeedbackModalProps) {
+export function ExitIntentFeedbackModal({ open, onClose, onNavigateBack, onTrackEvent }: ExitIntentFeedbackModalProps) {
   const [rating, setRating] = useState<number>(0);
   const [hoveredRating, setHoveredRating] = useState<number>(0);
   const [nome, setNome] = useState('');
@@ -27,9 +27,6 @@ export function ExitIntentFeedbackModal({ open, onClose, onTrackEvent, triggered
   const handleClose = () => {
     onTrackEvent?.('exit_intent_popup_closed');
     onClose();
-    if (triggeredByNav) {
-      window.history.back();
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,22 +50,10 @@ export function ExitIntentFeedbackModal({ open, onClose, onTrackEvent, triggered
 
       setTimeout(() => {
         onClose();
-        if (triggeredByNav) {
-          window.history.back();
-        }
       }, 2500);
     } catch {
       setSubmitState('error');
     }
-  };
-
-  const resetForm = () => {
-    setRating(0);
-    setHoveredRating(0);
-    setNome('');
-    setEmail('');
-    setFeedbackMessage('');
-    setSubmitState('idle');
   };
 
   return (
@@ -81,7 +66,7 @@ export function ExitIntentFeedbackModal({ open, onClose, onTrackEvent, triggered
         {/* Close button */}
         <button
           onClick={handleClose}
-          className="absolute right-4 top-4 text-muted-foreground hover:text-foreground transition-colors"
+          className="absolute right-4 top-4 text-muted-foreground hover:text-foreground transition-colors z-10"
           aria-label="Fechar"
         >
           <X className="h-5 w-5" />
