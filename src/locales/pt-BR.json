@@ -36,14 +36,15 @@
       "getStarted": "Começar Agora"
     },
     "hero": {
-      "badge": "Aprendizado acelerado com IA",
-      "title": "Domine idiomas através de",
-      "titleHighlight": "conversas reais",
-      "description": "Pratique inglês, espanhol, francês e outros idiomas em cenários do mundo real com nossa IA avançada. Receba feedback instantâneo e análises detalhadas do seu progresso.",
-      "cta": "Começar Gratuitamente",
+      "badge": "Plataforma de evolução contínua",
+      "title": "Evolua no idioma todos os dias com",
+      "titleHighlight": "prática real e feedback inteligente",
+      "description": "A Fluency IA não é um app de treino rápido. É um sistema contínuo de evolução que combina cenários reais, correções detalhadas e acompanhamento de progresso — para que você melhore de verdade, todos os dias.",
+      "cta": "Começar minha evolução",
       "demo": "Ver Demonstração",
       "freeTrial": "7 dias grátis",
-      "noCard": "Sem cartão de crédito"
+      "noCard": "Sem cartão",
+      "visibleProgress": "Progresso visível desde o primeiro dia"
     },
     "stats": {
       "activeUsers": "Usuários Ativos",
@@ -51,9 +52,29 @@
       "languages": "Idiomas Disponíveis",
       "satisfaction": "Satisfação"
     },
+    "whyItWorks": {
+      "title": "Por que isso funciona",
+      "subtitle": "Um sistema projetado para evolução real — não apenas exposição ao idioma",
+      "continuousFeedback": {
+        "title": "Feedback contínuo",
+        "description": "Cada conversa gera uma análise detalhada do que você acertou e onde pode melhorar."
+      },
+      "detailedCorrections": {
+        "title": "Correções detalhadas",
+        "description": "Erros de gramática, vocabulário e clareza são identificados com sugestões específicas de melhoria."
+      },
+      "levelAdaptation": {
+        "title": "Adaptação ao seu nível",
+        "description": "A IA ajusta a complexidade das conversas conforme seu progresso, mantendo o desafio ideal."
+      },
+      "evolutionHistory": {
+        "title": "Histórico de evolução",
+        "description": "Acompanhe sua melhoria ao longo do tempo com métricas claras e comparáveis."
+      }
+    },
     "method": {
-      "title": "Como funciona nosso método de ensino",
-      "subtitle": "Aprendizado baseado em tarefas reais (Task-Based Language Teaching)",
+      "title": "Metodologia comprovada: Task-Based Language Teaching",
+      "subtitle": "A mesma abordagem usada nas melhores universidades do mundo — aplicada com inteligência artificial",
       "badge": "Aprendizado por Tarefas",
       "methodology": "Método TBLT",
       "footer": "Método amplamente adotado em universidades de referência e programas de ensino de idiomas.",
@@ -77,47 +98,47 @@
       }
     },
     "features": {
-      "title": "Recursos que impulsionam seu aprendizado",
-      "subtitle": "Tecnologia de ponta combinada com metodologia comprovada para resultados reais",
+      "title": "O que muda na sua evolução",
+      "subtitle": "Cada recurso foi desenhado para gerar resultado mensurável — não apenas oferecer funcionalidades",
       "contextualConversations": {
-        "title": "Conversas Contextuais",
-        "description": "Pratique em cenários reais como restaurantes, aeroportos, reuniões de negócios e muito mais."
+        "title": "Prática em cenários reais",
+        "description": "Você treina em situações que vai enfrentar de verdade: restaurantes, aeroportos, reuniões e entrevistas."
       },
       "detailedAnalytics": {
-        "title": "Análises Detalhadas",
-        "description": "Acompanhe seu progresso com métricas de gramática, vocabulário, fluência e pronúncia."
+        "title": "Visão clara do seu progresso",
+        "description": "Métricas de gramática, vocabulário, fluência e pronúncia mostram exatamente onde você está evoluindo."
       },
       "audioSupport": {
-        "title": "Suporte a Áudio",
-        "description": "Pratique sua pronúncia com reconhecimento de voz e feedback detalhado."
+        "title": "Pronúncia que melhora a cada sessão",
+        "description": "Reconhecimento de voz com feedback específico para corrigir e refinar sua pronúncia continuamente."
       },
       "fiveLanguages": {
-        "title": "5 Idiomas",
-        "description": "Inglês, Espanhol, Francês, Italiano e Alemão disponíveis para prática."
+        "title": "5 idiomas para evoluir",
+        "description": "Inglês, Espanhol, Francês, Italiano e Alemão — com o mesmo sistema de evolução contínua."
       },
       "instantFeedback": {
-        "title": "Feedback Instantâneo",
-        "description": "Receba correções e sugestões em tempo real durante suas conversas."
+        "title": "Correções em tempo real",
+        "description": "A cada mensagem, você recebe orientações para melhorar gramática, vocabulário e clareza na hora."
       },
       "adaptiveLevels": {
-        "title": "Níveis Adaptativos",
-        "description": "A IA ajusta a dificuldade automaticamente conforme seu progresso."
+        "title": "Dificuldade que acompanha você",
+        "description": "A IA identifica seu nível e aumenta a complexidade conforme você evolui, mantendo o desafio constante."
       }
     },
     "howItWorks": {
-      "title": "Como funciona",
-      "subtitle": "Comece a praticar em apenas 3 passos simples",
+      "title": "Um processo contínuo de evolução — não apenas prática",
+      "subtitle": "Cada sessão é um passo real na sua jornada de fluência",
       "step1": {
-        "title": "Escolha um cenário",
-        "description": "Selecione entre 8 cenários do mundo real, desde restaurantes até reuniões de negócios."
+        "title": "Pratique em cenários reais",
+        "description": "Escolha situações que você vai enfrentar no mundo real. Cada cenário foi desenhado para treinar habilidades específicas."
       },
       "step2": {
-        "title": "Converse com a IA",
-        "description": "Pratique conversas naturais com nossa IA avançada que simula situações reais."
+        "title": "Receba feedback inteligente",
+        "description": "Após cada conversa, a IA analisa gramática, vocabulário, clareza e fluência — com correções específicas e acionáveis."
       },
       "step3": {
-        "title": "Receba feedback",
-        "description": "Analise seu desempenho com métricas detalhadas e sugestões de melhoria."
+        "title": "Evolua ao longo do tempo",
+        "description": "Acompanhe seu progresso com métricas claras. A dificuldade aumenta conforme você melhora, garantindo evolução constante."
       }
     },
     "pricing": {
@@ -155,9 +176,9 @@
       }
     },
     "cta": {
-      "title": "Pronto para dominar um novo idioma?",
-      "description": "Junte-se a milhares de pessoas que já estão aprendendo idiomas de forma mais eficiente com Fluency IA.",
-      "button": "Começar Agora — É Grátis"
+      "title": "Sua evolução começa agora",
+      "description": "Junte-se a quem já está evoluindo de verdade — com prática real, feedback inteligente e progresso visível desde o primeiro dia.",
+      "button": "Começar minha evolução"
     },
     "footer": {
       "terms": "Termos de Uso",

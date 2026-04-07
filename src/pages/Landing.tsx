@@ -12,7 +12,11 @@ import {
   Play,
   Users,
   Award,
-  Zap
+  Zap,
+  TrendingUp,
+  Target,
+  History,
+  RefreshCw
 } from 'lucide-react';
 
 const Landing: React.FC = () => {
@@ -78,7 +82,7 @@ const Landing: React.FC = () => {
                 </Button>
               </div>
 
-              <div className="flex items-center gap-6 text-sm text-muted-foreground">
+              <div className="flex items-center gap-4 flex-wrap text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-success" />
                   {t('landing.hero.freeTrial')}
@@ -86,6 +90,10 @@ const Landing: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-success" />
                   {t('landing.hero.noCard')}
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-success" />
+                  {t('landing.hero.visibleProgress')}
                 </div>
               </div>
             </div>
@@ -151,8 +159,43 @@ const Landing: React.FC = () => {
         </div>
       </section>
 
+      {/* Why It Works Section */}
+      <section className="py-20 px-6 bg-muted/30">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              {t('landing.whyItWorks.title')}
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              {t('landing.whyItWorks.subtitle')}
+            </p>
+          </div>
 
-      {/* TBLT Methodology Section */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <WhyCard
+              icon={<RefreshCw className="w-6 h-6" />}
+              title={t('landing.whyItWorks.continuousFeedback.title')}
+              description={t('landing.whyItWorks.continuousFeedback.description')}
+            />
+            <WhyCard
+              icon={<Target className="w-6 h-6" />}
+              title={t('landing.whyItWorks.detailedCorrections.title')}
+              description={t('landing.whyItWorks.detailedCorrections.description')}
+            />
+            <WhyCard
+              icon={<TrendingUp className="w-6 h-6" />}
+              title={t('landing.whyItWorks.levelAdaptation.title')}
+              description={t('landing.whyItWorks.levelAdaptation.description')}
+            />
+            <WhyCard
+              icon={<History className="w-6 h-6" />}
+              title={t('landing.whyItWorks.evolutionHistory.title')}
+              description={t('landing.whyItWorks.evolutionHistory.description')}
+            />
+          </div>
+        </div>
+      </section>
+
       <section className="py-20 px-6">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
@@ -402,6 +445,18 @@ const StatItem: React.FC<{ value: string; label: string }> = ({ value, label }) 
   <div className="text-center">
     <p className="text-3xl md:text-4xl font-bold text-gradient mb-2">{value}</p>
     <p className="text-sm text-muted-foreground">{label}</p>
+  </div>
+);
+
+const WhyCard: React.FC<{ icon: React.ReactNode; title: string; description: string }> = ({
+  icon, title, description
+}) => (
+  <div className="p-6 bg-card rounded-2xl border border-border text-center">
+    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary mx-auto mb-4">
+      {icon}
+    </div>
+    <h3 className="font-semibold text-foreground mb-2">{title}</h3>
+    <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
   </div>
 );
 
