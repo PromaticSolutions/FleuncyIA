@@ -36,14 +36,15 @@
       "getStarted": "Começar Agora"
     },
     "hero": {
-      "badge": "Aprendizado acelerado com IA",
-      "title": "Domine idiomas através de",
-      "titleHighlight": "conversas reais",
-      "description": "Pratique inglês, espanhol, francês e outros idiomas em cenários do mundo real com nossa IA avançada. Receba feedback instantâneo e análises detalhadas do seu progresso.",
-      "cta": "Começar Gratuitamente",
+      "badge": "Plataforma de evolução contínua",
+      "title": "Evolua no idioma todos os dias com",
+      "titleHighlight": "prática real e feedback inteligente",
+      "description": "A Fluency IA não é um app de treino rápido. É um sistema contínuo de evolução que combina cenários reais, correções detalhadas e acompanhamento de progresso — para que você melhore de verdade, todos os dias.",
+      "cta": "Começar minha evolução",
       "demo": "Ver Demonstração",
       "freeTrial": "7 dias grátis",
-      "noCard": "Sem cartão de crédito"
+      "noCard": "Sem cartão",
+      "visibleProgress": "Progresso visível desde o primeiro dia"
     },
     "stats": {
       "activeUsers": "Usuários Ativos",
