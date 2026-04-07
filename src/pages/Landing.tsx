@@ -12,7 +12,11 @@ import {
   Play,
   Users,
   Award,
-  Zap
+  Zap,
+  TrendingUp,
+  Target,
+  History,
+  RefreshCw
 } from 'lucide-react';
 
 const Landing: React.FC = () => {
