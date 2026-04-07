@@ -36,14 +36,15 @@
       "getStarted": "Get Started"
     },
     "hero": {
-      "badge": "Accelerated learning with AI",
-      "title": "Master languages through",
-      "titleHighlight": "real conversations",
-      "description": "Practise English, Spanish, French and other languages in real-world scenarios with our advanced AI. Receive instant feedback and detailed progress analytics.",
-      "cta": "Start Free",
+      "badge": "Continuous evolution platform",
+      "title": "Evolve your language skills every day with",
+      "titleHighlight": "real practice and smart feedback",
+      "description": "Fluency AI isn't a quick-drill app. It's a continuous evolution system combining real scenarios, detailed corrections and progress tracking — so you genuinely improve, every single day.",
+      "cta": "Start my evolution",
       "demo": "Watch Demo",
       "freeTrial": "7 days free",
-      "noCard": "No credit card required"
+      "noCard": "No credit card",
+      "visibleProgress": "Visible progress from day one"
     },
     "stats": {
       "activeUsers": "Active Users",
