@@ -52,9 +52,29 @@
       "languages": "Languages Available",
       "satisfaction": "Satisfaction"
     },
+    "whyItWorks": {
+      "title": "Why it works",
+      "subtitle": "A system designed for real evolution — not just language exposure",
+      "continuousFeedback": {
+        "title": "Continuous feedback",
+        "description": "Every conversation generates a detailed analysis of what you got right and where you can improve."
+      },
+      "detailedCorrections": {
+        "title": "Detailed corrections",
+        "description": "Grammar, vocabulary and clarity errors are identified with specific improvement suggestions."
+      },
+      "levelAdaptation": {
+        "title": "Adapts to your level",
+        "description": "The AI adjusts conversation complexity as you progress, keeping the challenge optimal."
+      },
+      "evolutionHistory": {
+        "title": "Evolution history",
+        "description": "Track your improvement over time with clear, comparable metrics."
+      }
+    },
     "method": {
-      "title": "How our teaching method works",
-      "subtitle": "Task-Based Language Teaching (TBLT)",
+      "title": "Proven methodology: Task-Based Language Teaching",
+      "subtitle": "The same approach used at the world's top universities — powered by artificial intelligence",
       "badge": "Task-Based Learning",
       "methodology": "TBLT Method",
       "footer": "A methodology widely adopted at leading universities and language teaching programmes.",
