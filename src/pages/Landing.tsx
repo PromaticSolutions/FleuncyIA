@@ -82,7 +82,7 @@ const Landing: React.FC = () => {
                 </Button>
               </div>
 
-              <div className="flex items-center gap-6 text-sm text-muted-foreground">
+              <div className="flex items-center gap-4 flex-wrap text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-success" />
                   {t('landing.hero.freeTrial')}
@@ -90,6 +90,10 @@ const Landing: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-success" />
                   {t('landing.hero.noCard')}
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-success" />
+                  {t('landing.hero.visibleProgress')}
                 </div>
               </div>
             </div>
