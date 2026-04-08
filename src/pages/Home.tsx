@@ -17,6 +17,9 @@ const Home: React.FC = () => {
   const { user, isAuthenticated, hasCompletedOnboarding, isLoading, authUserId } = useApp();
   const { credits, hasUnlimitedCredits } = useCredits(authUserId || undefined, user?.plan);
   const [voiceModalOpen, setVoiceModalOpen] = useState(false);
+  const [setupScenario, setSetupScenario] = useState<'interview' | 'hotel' | null>(null);
+
+  const activeScenarioIds = ['interview', 'hotel'];
 
   useEffect(() => {
     if (!isLoading) {
