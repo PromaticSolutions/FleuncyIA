@@ -170,7 +170,7 @@ const Home: React.FC = () => {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-foreground">{t('home.scenarios.title')}</h2>
             <p className="text-sm text-muted-foreground">
-              {scenarios.filter(s => !user || !isScenarioLocked(s, user.plan)).length} {t('home.scenarios.of')} {scenarios.length} {t('home.scenarios.unlocked')}
+              {activeScenarioIds.length} ativos • {scenarios.length - activeScenarioIds.length} em breve
             </p>
           </div>
           
