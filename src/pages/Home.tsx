@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '@/contexts/AppContext';
 import { scenarios, isScenarioLocked } from '@/data/scenarios';
-import { Lock, TrendingUp, Target, BookOpen, Trophy, Users, ChevronRight, Phone } from 'lucide-react';
+import { Lock, TrendingUp, Target, BookOpen, Trophy, Users, ChevronRight, Phone, Clock } from 'lucide-react';
 import { Scenario } from '@/types';
 import { AppLayout } from '@/components/AppLayout';
 import { useCredits } from '@/hooks/useCredits';
 import { CreditsDisplay } from '@/components/CreditsDisplay';
 import { VoiceCallScenarioModal } from '@/components/VoiceCallScenarioModal';
+import { ScenarioSetupModal } from '@/components/ScenarioSetupModal';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +17,9 @@ const Home: React.FC = () => {
   const { user, isAuthenticated, hasCompletedOnboarding, isLoading, authUserId } = useApp();
   const { credits, hasUnlimitedCredits } = useCredits(authUserId || undefined, user?.plan);
   const [voiceModalOpen, setVoiceModalOpen] = useState(false);
+  const [setupScenario, setSetupScenario] = useState<'interview' | 'hotel' | null>(null);
+
+  const activeScenarioIds = ['interview', 'hotel'];
 
   useEffect(() => {
     if (!isLoading) {
@@ -43,10 +47,10 @@ const Home: React.FC = () => {
   };
 
   const handleScenarioClick = (scenario: Scenario) => {
-    if (user && isScenarioLocked(scenario, user.plan)) {
-      navigate('/plans');
-    } else {
-      navigate(`/chat/${scenario.id}`);
+    const isActive = activeScenarioIds.includes(scenario.id);
+    if (!isActive) return; // "Em breve" — not clickable
+    if (scenario.id === 'interview' || scenario.id === 'hotel') {
+      setSetupScenario(scenario.id);
     }
   };
 
@@ -156,45 +160,51 @@ const Home: React.FC = () => {
         </div>
 
         <VoiceCallScenarioModal open={voiceModalOpen} onClose={() => setVoiceModalOpen(false)} />
-
+        <ScenarioSetupModal
+          open={setupScenario !== null}
+          onClose={() => setSetupScenario(null)}
+          scenarioId={setupScenario || 'interview'}
+        />
         {/* Scenarios Section */}
         <div>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-foreground">{t('home.scenarios.title')}</h2>
             <p className="text-sm text-muted-foreground">
-              {scenarios.filter(s => !user || !isScenarioLocked(s, user.plan)).length} {t('home.scenarios.of')} {scenarios.length} {t('home.scenarios.unlocked')}
+              {activeScenarioIds.length} ativos • {scenarios.length - activeScenarioIds.length} em breve
             </p>
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {scenarios.map((scenario) => {
-              const locked = user ? isScenarioLocked(scenario, user.plan) : true;
+              const isActive = activeScenarioIds.includes(scenario.id);
               return (
                 <button
                   key={scenario.id}
                   onClick={() => handleScenarioClick(scenario)}
+                  disabled={!isActive}
                   className={`relative p-5 rounded-xl border text-left transition-all duration-200 group ${
-                    locked 
-                      ? 'border-border bg-muted/30 opacity-60 cursor-not-allowed' 
-                      : 'border-border bg-card hover:border-primary hover:shadow-fluency-md'
+                    isActive
+                      ? 'border-border bg-card hover:border-primary hover:shadow-fluency-md cursor-pointer'
+                      : 'border-border bg-muted/30 opacity-50 cursor-not-allowed'
                   }`}
                 >
-                  {locked && (
-                    <div className="absolute top-4 right-4 w-7 h-7 rounded-full bg-muted flex items-center justify-center">
-                      <Lock className="w-3.5 h-3.5 text-muted-foreground" />
+                  {!isActive && (
+                    <div className="absolute top-4 right-4 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-muted">
+                      <Lock className="w-3 h-3 text-muted-foreground" />
+                      <span className="text-[10px] text-muted-foreground font-medium">Em breve</span>
                     </div>
                   )}
                   
-                  <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${scenario.color} flex items-center justify-center mb-4 transition-transform ${!locked && 'group-hover:scale-110'}`}>
+                  <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${scenario.color} flex items-center justify-center mb-4 transition-transform ${isActive && 'group-hover:scale-110'}`}>
                     <span className="text-2xl">{scenario.icon}</span>
                   </div>
                   
                   <h3 className="font-semibold text-foreground mb-1.5">{scenario.titleKey ? t(scenario.titleKey) : scenario.title}</h3>
                   <p className="text-sm text-muted-foreground line-clamp-2">{scenario.descriptionKey ? t(scenario.descriptionKey) : scenario.description}</p>
                   
-                  {!locked && (
+                  {isActive && (
                     <div className="mt-4 pt-4 border-t border-border">
-                      <span className="text-xs text-primary font-medium">{t('home.scenarios.startConversation')}</span>
+                      <span className="text-xs text-primary font-medium">Começar simulação</span>
                     </div>
                   )}
                 </button>
