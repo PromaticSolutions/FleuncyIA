@@ -47,10 +47,10 @@ const Home: React.FC = () => {
   };
 
   const handleScenarioClick = (scenario: Scenario) => {
-    if (user && isScenarioLocked(scenario, user.plan)) {
-      navigate('/plans');
-    } else {
-      navigate(`/chat/${scenario.id}`);
+    const isActive = activeScenarioIds.includes(scenario.id);
+    if (!isActive) return; // "Em breve" — not clickable
+    if (scenario.id === 'interview' || scenario.id === 'hotel') {
+      setSetupScenario(scenario.id);
     }
   };
 
