@@ -160,7 +160,11 @@ const Home: React.FC = () => {
         </div>
 
         <VoiceCallScenarioModal open={voiceModalOpen} onClose={() => setVoiceModalOpen(false)} />
-
+        <ScenarioSetupModal
+          open={setupScenario !== null}
+          onClose={() => setSetupScenario(null)}
+          scenarioId={setupScenario || 'interview'}
+        />
         {/* Scenarios Section */}
         <div>
           <div className="flex items-center justify-between mb-6">
