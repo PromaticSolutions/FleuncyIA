@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '@/contexts/AppContext';
 import { scenarios, isScenarioLocked } from '@/data/scenarios';
-import { Lock, TrendingUp, Target, BookOpen, Trophy, Users, ChevronRight, Phone } from 'lucide-react';
+import { Lock, TrendingUp, Target, BookOpen, Trophy, Users, ChevronRight, Phone, Clock } from 'lucide-react';
 import { Scenario } from '@/types';
 import { AppLayout } from '@/components/AppLayout';
 import { useCredits } from '@/hooks/useCredits';
 import { CreditsDisplay } from '@/components/CreditsDisplay';
 import { VoiceCallScenarioModal } from '@/components/VoiceCallScenarioModal';
+import { ScenarioSetupModal } from '@/components/ScenarioSetupModal';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
