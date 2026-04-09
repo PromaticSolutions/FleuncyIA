@@ -18,6 +18,7 @@ import {
   History,
   RefreshCw
 } from 'lucide-react';
+import HeroCarousel from '@/components/HeroCarousel';
 
 const Landing: React.FC = () => {
   const navigate = useNavigate();
