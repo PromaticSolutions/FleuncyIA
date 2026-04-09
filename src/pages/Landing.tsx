@@ -18,6 +18,7 @@ import {
   History,
   RefreshCw
 } from 'lucide-react';
+import HeroCarousel from '@/components/HeroCarousel';
 
 const Landing: React.FC = () => {
   const navigate = useNavigate();
@@ -52,112 +53,8 @@ const Landing: React.FC = () => {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6">
-        <div className="container mx-auto max-w-6xl">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="animate-fade-in">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted text-sm text-foreground/80 mb-6">
-                <Zap className="w-4 h-4 text-primary" />
-                {t('landing.hero.badge')}
-              </div>
-              
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight mb-6">
-                {t('landing.hero.title')}{' '}
-                <span className="text-gradient">{t('landing.hero.titleHighlight')}</span>
-              </h1>
-              
-              <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-                {t('landing.hero.description')}
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                <Button size="xl" onClick={() => navigate('/auth')} className="gradient-primary border-0">
-                  {t('landing.hero.cta')}
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-                <Button size="xl" variant="outline" className="group">
-                  <Play className="w-5 h-5 mr-2 group-hover:text-primary transition-colors" />
-                  {t('landing.hero.demo')}
-                </Button>
-              </div>
-
-              <div className="flex items-center gap-4 flex-wrap text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-success" />
-                  {t('landing.hero.freeTrial')}
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-success" />
-                  {t('landing.hero.noCard')}
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-success" />
-                  {t('landing.hero.visibleProgress')}
-                </div>
-              </div>
-            </div>
-
-            <div className="relative animate-slide-up">
-              <div className="relative bg-card rounded-2xl border border-border p-6 shadow-fluency-lg">
-                <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
-                  <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center">
-                    <span className="text-lg">🍽️</span>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-foreground">{t('landing.chat.scenario')}: {t('landing.method.scenarios.restaurant')}</p>
-                    <p className="text-xs text-muted-foreground">{t('landing.chat.level')}</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="flex gap-3">
-                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-sm">🤖</div>
-                    <div className="flex-1 bg-muted rounded-2xl rounded-tl-sm p-3">
-                      <p className="text-sm text-foreground">Good evening! Welcome to La Bella Italia. Do you have a reservation?</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-3 justify-end">
-                    <div className="flex-1 max-w-[80%] gradient-primary rounded-2xl rounded-tr-sm p-3">
-                      <p className="text-sm text-white">Yes, I have a reservation for two under the name Johnson.</p>
-                    </div>
-                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-sm">👤</div>
-                  </div>
-                  
-                  <div className="flex gap-3">
-                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-sm">🤖</div>
-                    <div className="flex-1 bg-muted rounded-2xl rounded-tl-sm p-3">
-                      <p className="text-sm text-foreground">Perfect! Right this way, please. Would you like to see our wine menu?</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-border">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-success flex items-center gap-1">
-                      <CheckCircle className="w-3 h-3" />
-                      {t('landing.chat.correctGrammar')}
-                    </span>
-                    <span className="text-muted-foreground">Score: 95/100</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Floating badges */}
-              <div className="absolute -top-4 -right-4 bg-card border border-border rounded-xl px-4 py-2 shadow-fluency-md">
-                <p className="text-xs text-muted-foreground">{t('landing.features.instantFeedback.title')}</p>
-                <p className="font-bold text-foreground">{t('landing.chat.realTimeFeedback')}</p>
-              </div>
-              
-              <div className="absolute -bottom-4 -left-4 bg-card border border-border rounded-xl px-4 py-2 shadow-fluency-md">
-                <p className="text-xs text-muted-foreground">{t('landing.chat.scenario')}</p>
-                <p className="font-bold text-foreground">{t('landing.chat.scenarios')}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Hero Carousel */}
+      <HeroCarousel />
 
       {/* Why It Works Section */}
       <section className="py-20 px-6 bg-muted/30">
