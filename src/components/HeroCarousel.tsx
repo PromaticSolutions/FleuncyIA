@@ -173,12 +173,19 @@ const HeroCarousel: React.FC = () => {
         return <MockupAnalytics />;
       case 'character':
         return (
-          <img
-            src={characterImg}
-            alt="Fluency IA"
-            className="w-[300px] xl:w-[340px] h-auto object-contain drop-shadow-2xl"
-            loading="eager"
-          />
+          <div className="relative flex items-center justify-center">
+            {/* Ambient glow */}
+            <div className="absolute w-[280px] h-[280px] xl:w-[340px] xl:h-[340px] rounded-full bg-primary/15 blur-[80px]" />
+            {/* Secondary glow */}
+            <div className="absolute w-[180px] h-[180px] xl:w-[220px] xl:h-[220px] rounded-full bg-accent/10 blur-[60px] translate-y-8" />
+            {/* Character */}
+            <img
+              src={characterImg}
+              alt="Fluency IA"
+              className="relative z-10 w-[340px] xl:w-[400px] h-auto object-contain drop-shadow-[0_8px_40px_rgba(155,107,242,0.35)] translate-y-2"
+              loading="eager"
+            />
+          </div>
         );
       case 'mockup-voice':
         return <MockupVoice />;
